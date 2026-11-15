@@ -18,22 +18,26 @@ def _starts(n):
     return [round(i * (n - TILE) / (k - 1)) for i in range(k)]
 
 
+def _ramp(n):
+    i = np.arange(n)
+    return np.minimum(np.minimum(i + 1, n - i), OVERLAP) / OVERLAP
+
+
 def vitmatte(sess, rgb, tri):
-    """rgb: float32 HxWx3 in 0..1, tri: HxW. Draait alleen op tegels met onzekere pixels."""
+    """rgb: float32 HxWx3 in 0..1, tri: HxW. Draait alleen op tegels (max 1024 px) met onzekere
+    pixels, op de oorspronkelijke resolutie; tegels worden opgevuld tot een veelvoud van 32."""
     h, w = tri.shape
     acc, wsum = np.zeros((h, w), np.float32), np.zeros((h, w), np.float32)
-    ramp = np.minimum(np.arange(TILE) + 1, OVERLAP) / OVERLAP
-    feather = np.minimum.outer(np.minimum(ramp, ramp[::-1]), np.minimum(ramp, ramp[::-1])).astype(np.float32)
     for y in _starts(h):
         for x in _starts(w):
             t = tri[y:y + TILE, x:x + TILE]
             if not (t == 0.5).any(): continue
             th, tw = t.shape
-            inp = np.zeros((1, 4, TILE, TILE), np.float32)  # opvullen tot vaste invoermaat
+            inp = np.zeros((1, 4, -(-th // 32) * 32, -(-tw // 32) * 32), np.float32)
             inp[0, :3, :th, :tw] = ((rgb[y:y + th, x:x + tw] - 0.5) / 0.5).transpose(2, 0, 1)
             inp[0, 3, :th, :tw] = t
             a = sess.run(None, {'pixel_values': inp})[0][0, 0, :th, :tw]
-            f = feather[:th, :tw]
+            f = np.minimum.outer(_ramp(th), _ramp(tw)).astype(np.float32)
             acc[y:y + th, x:x + tw] += a * f
             wsum[y:y + th, x:x + tw] += f
     out = np.where(tri == 1, 1.0, 0.0).astype(np.float32)

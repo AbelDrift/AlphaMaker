@@ -21,7 +21,9 @@ MODELS = {
     'birefnet-hr-matting': (REMBG + 'BiRefNet_HR-matting-epoch_135.onnx', 2048, IMNET, 'sigmoid', None),
     'rmbg-2.0':         (HF + 'mohantesting/remove_background/resolve/main/onnx/model.onnx', 1024, IMNET, 'auto', None),
     'ben2':             (HF + 'PramaLLC/BEN2/resolve/main/BEN2_Base.onnx', 1024, NONE, 'minmax', None),
-    'vitmatte':         (REMBG + 'vitmatte-small-composition-1k.onnx', 1024, None, None, None),
+    # ViTMatte (verfijning): dynamische invoermaat, ook vanuit de browser te laden
+    'vitmatte':         (HF + 'Xenova/vitmatte-small-composition-1k/resolve/main/onnx/model.onnx', None, None, None, None),
+    'vitmatte-q':       (HF + 'Xenova/vitmatte-small-composition-1k/resolve/main/onnx/model_quantized.onnx', None, None, None, None),
 }
 CACHE = Path(os.environ.get('ALPHAMAKER_MODELS', Path.home() / '.cache/alphamaker'))
 _sessions = {}

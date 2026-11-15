@@ -66,3 +66,9 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - Volgende stap na benchmark: `bench/refine_bench.py <beste-model> vm8|vm16|gf4` → beste
   verfijning kiezen, DEFAULT_MODEL + band in core.py zetten, end-to-end test, README, repo's.
 - claude-eyes: bekeken, niet geïnstalleerd (is voor video; foto's kan Claude zelf lezen).
+
+## Publicatie-afspraken (2026-11-16)
+- Repo's **openbaar**. Abel maakt zelf lege repo's AbelDrift/AlphaMaker op GitHub + Codeberg;
+  ik push via SSH (key werkt voor beide, user AbelDrift). Geen push vóór code klaar is.
+- Webversie in `docs/` (GitHub Pages: main /docs) + `pages`-branch voor Codeberg Pages.
+  Browser kan alleen modellen van Hugging Face laden (CORS), niet van GitHub-releases.
