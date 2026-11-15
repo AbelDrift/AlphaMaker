@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlphaMaker</title>
+<style>
+  :root { --bg:#f6f6f4; --fg:#1d1d1b; --muted:#6b6b66; --accent:#2f6fde; --card:#fff; --line:#ddd; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151514; --fg:#ececea; --muted:#9a9a94; --card:#20201e; --line:#3a3a37; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  main { max-width:960px; margin:0 auto; padding:24px 16px; }
+  h1 { margin:0 0 4px; font-size:1.6rem; }
+  p { margin:0 0 16px; color:var(--muted); }
+  #drop { display:block; border:2px dashed var(--line); border-radius:12px; padding:40px 16px; text-align:center; cursor:pointer; background:var(--card); }
+  #drop.over, #drop:focus-within { border-color:var(--accent); }
+  #drop input { position:absolute; opacity:0; width:1px; height:1px; }
+  #status { min-height:1.5em; margin:12px 0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; }
+  figure { margin:0; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px; }
+  figcaption { font-size:.9rem; color:var(--muted); padding:4px; }
+  img, canvas { display:block; width:100%; height:auto; border-radius:8px; }
+  .checker { background:repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0/20px 20px; }
+  .tools { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:16px; }
+  button, label.btn { font:inherit; padding:8px 16px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.5; cursor:default; }
+  .opt { display:inline-flex; gap:8px; margin-top:12px; color:var(--muted); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>AlphaMaker</h1>
+  <p>Achtergrond verwijderen op je eigen pc. Je foto gaat nergens anders heen.</p>
+
+  <label id="drop">
+    <input id="file" type="file" accept="image/*">
+    <strong>Kies een foto</strong>, sleep hem hierheen of plak met Ctrl+V
+  </label>
+  <label class="opt"><input id="snel" type="checkbox"> Snel (zonder randverfijning)</label>
+  <div id="status" role="status" aria-live="polite"></div>
+
+  <section id="result" hidden>
+    <div class="grid">
+      <figure><img id="orig" alt="Origineel"><figcaption>Origineel</figcaption></figure>
+      <figure><canvas id="out" class="checker" aria-label="Resultaat zonder achtergrond"></canvas><figcaption>Resultaat</figcaption></figure>
+    </div>
+    <div class="tools">
+      <label>Achtergrond
+        <select id="bgmode"><option value="none">Transparant</option><option value="color">Kleur</option></select>
+      </label>
+      <input id="bgcolor" type="color" value="#ffffff" aria-label="Achtergrondkleur" hidden>
+      <button id="download" class="primary">Download PNG</button>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const status = t => $('status').textContent = t;
+let cutout, name = 'alphamaker', busy = false;
+
+async function handle(file) {
+  if (!file?.type.startsWith('image/')) return status('Dat is geen afbeelding.');
+  if (busy) return status('Even geduld, de vorige foto is nog bezig.');
+  busy = true;
+  name = file.name.replace(/\.[^.]+$/, '') || 'alphamaker';
+  if ($('orig').src) URL.revokeObjectURL($('orig').src);
+  $('orig').src = URL.createObjectURL(file);
+  $('download').disabled = true;
+  const t0 = performance.now();
+  try {
+    status('Achtergrond verwijderen… (op deze pc kan dat tot een halve minuut duren)');
+    const r = await fetch('/api/cutout' + ($('snel').checked ? '?snel=1' : ''), { method: 'POST', body: file });
+    if (!r.ok) throw new Error(await r.text());
+    const bmp = await createImageBitmap(await r.blob());
+    const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+    const ctx = c.getContext('2d'); ctx.drawImage(bmp, 0, 0);
+    cutout = ctx.getImageData(0, 0, c.width, c.height);
+    render();
+    $('result').hidden = false;
+    $('download').disabled = false;
+    status(`Klaar in ${((performance.now() - t0) / 1000).toFixed(1)} s.`);
+  } catch (e) {
+    status('Mislukt: ' + e.message);
+  } finally { busy = false; }
+}
+
+function render() {
+  const c = $('out'), ctx = c.getContext('2d');
+  c.width = cutout.width; c.height = cutout.height;
+  ctx.putImageData(cutout, 0, 0);
+  if ($('bgmode').value === 'color') {
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = $('bgcolor').value;
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+}
+
+$('file').onchange = e => handle(e.target.files[0]);
+$('bgmode').onchange = () => { $('bgcolor').hidden = $('bgmode').value !== 'color'; render(); };
+$('bgcolor').oninput = render;
+$('download').onclick = () => $('out').toBlob(b => {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + '-alpha.png' });
+  a.click();
+});
+const drop = $('drop');
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); handle(e.dataTransfer.files[0]); };
+addEventListener('paste', e => { const f = e.clipboardData.files[0]; if (f) handle(f); });
+</script>
+</body>
+</html>

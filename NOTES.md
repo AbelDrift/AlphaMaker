@@ -51,3 +51,18 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 
 ## Einddoel publicatie
 - Abel wil AlphaMaker als nieuwe repo op **Codeberg én GitHub** (vragen: openbaar/privé, vóór pushen).
+- Benchmark draait als systemd-taak (overleeft crash van Claude/terminal):
+  `systemctl --user status alphamaker-bench`, log: `results/run.log`.
+  Opnieuw starten (na reboot): `systemd-run --user --unit=alphamaker-bench --working-directory=$HOME/claude/AlphaMaker -p OOMPolicy=continue bash -c 'bench/run_all.sh >> results/run.log 2>&1'`
+- Samenvatting: `.venv/bin/python bench/summarize.py` → `results/SUMMARY.md`.
+- 2026-11-16 00:07: birefnet-lite gekild op 4,5 GB (rc 137) — limiet werkte, pc heel.
+  Daarna in bench.py + core.py: `enable_mem_pattern=False` en `session.disable_prepacking=1`
+  (ORT plant anders alle tussenresultaten vooraf + dupliceert gewichten). Mislukte modellen
+  opnieuw: `rm results/<m>.status` en run_all.sh opnieuw. Desktop gebruikt zelf ~6 GB.
+- App-skelet (nog niet getest): `alphamaker/core.py` (modellen, segment, cutout),
+  `alphamaker/refine.py` (trimap, ViTMatte in tegels op volle res, guided filter,
+  randkleurcorrectie blur-fusion), `alphamaker/__main__.py` (CLI + `serve` op 127.0.0.1:8092),
+  `alphamaker/static/index.html` (UI uit Knipsel). DEFAULT_MODEL voorlopig birefnet-general.
+- Volgende stap na benchmark: `bench/refine_bench.py <beste-model> vm8|vm16|gf4` → beste
+  verfijning kiezen, DEFAULT_MODEL + band in core.py zetten, end-to-end test, README, repo's.
+- claude-eyes: bekeken, niet geïnstalleerd (is voor video; foto's kan Claude zelf lezen).

@@ -68,6 +68,8 @@ def load(name):
     so = ort.SessionOptions()
     so.intra_op_num_threads = 4          # laat 4 threads over voor de desktop
     so.enable_cpu_mem_arena = False      # lagere geheugenpiek
+    so.enable_mem_pattern = False       # geen vooraf gepland groot blok
+    so.add_session_config_entry('session.disable_prepacking', '1')  # geen verpakte kopie van gewichten
     sess = ort.InferenceSession(str(f), so, providers=['CPUExecutionProvider'])
     return lambda img: predict_onnx(sess, cfg, img)
 
