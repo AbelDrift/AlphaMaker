@@ -86,7 +86,8 @@ Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met Web
 - InSPyReNet bestaat niet als browsermodel. De standaard is daarom RMBG-1.4: beste randen op de schone testset, klein (84–167 MB) en snel, maar niet-commercieel (staat erbij).
 - Met WebGPU kun je ook BiRefNet kiezen, het beste voor haar (466 MB). Zonder WebGPU past BiRefNet niet in de 4 GB die WebAssembly maximaal mag gebruiken.
 - Foto's groter dan 12 megapixel worden eerst verkleind.
-- Afwerken zoals in de Python-app: achtergrondkleur of -foto, bijsnijden tot het onderwerp (met marge) en schaduw.
+- Afwerken zoals in de Python-app: achtergrondkleur of -foto, bijsnijden tot het onderwerp (met marge) en schaduw; downloaden als PNG, JPG of alleen het masker.
+- Meerdere foto's tegelijk: ze worden na elkaar verwerkt en zijn samen te downloaden.
 
 De rekenstappen zijn getest tegen de Python-versie (`node --test tests/web/`). Een rooktest in headless Firefox (`tests/web/run_browser_smoke.sh`) verwerkt een echte foto: zonder WebGPU klaar in 27 s, zonder consolefouten.
 

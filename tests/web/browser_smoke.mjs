@@ -34,7 +34,8 @@ console.log('rekenkern:', await evaluate(`document.getElementById('engine').text
 console.log('model:', await evaluate(`(() => { const s = document.getElementById('model'); s.value = ${JSON.stringify(model)}; s.dispatchEvent(new Event('change')); return s.value; })()`));
 await evaluate(`(async () => {
   const b = await (await fetch(${JSON.stringify(photo)})).blob();
-  const dt = new DataTransfer(); dt.items.add(new File([b], 'test.jpg', { type: 'image/jpeg' }));
+  const dt = new DataTransfer();  // twee foto's tegelijk: test ook de wachtrij (bulk)
+  for (const n of ['test1.jpg', 'test2.jpg']) dt.items.add(new File([b], n, { type: 'image/jpeg' }));
   const inp = document.getElementById('file'); inp.files = dt.files; inp.dispatchEvent(new Event('change'));
   return 'aangeboden';
 })()`);
@@ -43,7 +44,7 @@ while (Date.now() - t0 < 600_000) {
   s = await status() ?? '';
   if (s !== last && !/downloaden.*%/.test(s)) console.log('status:', s);
   last = s;
-  if (/^Klaar|^Mislukt|^Kon /.test(s)) break;
+  if ((/^Klaar/.test(s) && !/wachtrij/.test(s)) || /^Mislukt|^Kon /.test(s)) break;
   await sleep(2000);
 }
 const stats = await evaluate(`(() => {
@@ -54,6 +55,8 @@ const stats = await evaluate(`(() => {
   return c.width + 'x' + c.height + ', transparant ' + (100 * t / n).toFixed(1) + '%, halfdoorzichtig ' + (100 * h / n).toFixed(1) + '%';
 })()`);
 console.log('resultaat:', stats);
+const listed = await evaluate(`document.querySelectorAll('#list button').length`);
+console.log('in de lijst:', listed);
 // afwerking zoals remove.bg: bijsnijden (5% marge) + schaduw + witte achtergrond → kleiner en volledig dekkend
 const finish = await evaluate(`(() => {
   const set = (id, prop, v, ev) => { const e = document.getElementById(id); e[prop] = v; e.dispatchEvent(new Event(ev)); };
@@ -69,4 +72,4 @@ const finishOk = /niet-dekkend 0$/.test(finish ?? '') && finish.split(',')[0] !=
 console.log('console:', logs.length ? '\n  ' + logs.join('\n  ') : 'geen meldingen');
 await send('session.end').catch(() => {});
 ws.close();
-process.exit(/^Klaar/.test(s) && /transparant [1-9]/.test(stats) && finishOk ? 0 : 1);
+process.exit(/^Klaar/.test(s) && /transparant [1-9]/.test(stats) && finishOk && listed === 2 ? 0 : 1);

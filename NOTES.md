@@ -163,3 +163,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   modellen). Webversie: downloaden als PNG/JPG/alleen masker. Lokale `serve`-pagina heeft nu dezelfde
   afwerking (code overgenomen uit docs/app.js — houd gelijk); getest in headless Firefox tegen serve (isnet):
   2,4 s, afwerking ok, 0 consolemeldingen. Rooktest werkt ook tegen serve (foto als data-URL ≤128 KB).
+- 2026-11-16 ~11:00: webversie bulk (wachtrij, lijst, 'Alles downloaden', max 20 in geheugen); rooktest biedt 2 foto's aan (2 in lijst ok). Live GitHub+Codeberg doorstaan de rooktest (26 s, 0 fouten).

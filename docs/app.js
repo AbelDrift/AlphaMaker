@@ -42,6 +42,24 @@ function ready(m) {
   showLicense();
   setBusy(false);
   status('');
+  next();  // foto's die al klaarstonden terwijl de rekenkern startte
+}
+
+// wachtrij voor meerdere foto's (zoals de bulkfunctie van remove.bg)
+const queue = [], results = [];  // shortcut: max 20 resultaten (ImageData) in geheugen; daarna valt de oudste af
+function enqueue(files) {
+  const imgs = [...files].filter(f => f?.type.startsWith('image/'));
+  if (!imgs.length) return status('Dat is geen afbeelding.');
+  queue.push(...imgs);
+  if (busy) status(backend ? `Even geduld: nog ${queue.length} foto('s) in de wachtrij.` : 'Even geduld, de rekenkern start nog.');
+  else next();
+}
+const next = () => { const f = queue.shift(); if (f) handle(f); };
+
+function showList() {
+  $('list').replaceChildren(...results.map((r, i) => Object.assign(document.createElement('button'),
+    { type: 'button', textContent: r.name, onclick: () => { ({ name, cutout, box } = results[i]); render(); } })));
+  $('list').hidden = $('downloadAll').hidden = results.length < 2;
 }
 
 worker.onmessage = ({ data: m }) => {
@@ -49,19 +67,21 @@ worker.onmessage = ({ data: m }) => {
   if (m.type === 'progress') { status(m.text); return bar(m.frac); }
   setBusy(false);
   bar();
-  if (m.type === 'error') return status('Mislukt: ' + m.message);
+  if (m.type === 'error') { status('Mislukt: ' + m.message); return next(); }
   cutout = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
   box = subjectBox(cutout);
   render();
   $('result').hidden = false;
   $('download').disabled = false;
-  status(`Klaar in ${(m.ms / 1000).toLocaleString('nl', { maximumFractionDigits: 1 })} s. ${note}`);
+  results.push({ name, cutout, box });
+  if (results.length > 20) results.shift();
+  showList();
+  status(`Klaar in ${(m.ms / 1000).toLocaleString('nl', { maximumFractionDigits: 1 })} s. ${note}` + (queue.length ? ` Nog ${queue.length} in de wachtrij…` : ''));
+  next();
 };
 worker.onerror = e => { status('De rekenkern kon niet starten' + (e.message ? ': ' + e.message : '.')); bar(); };
 
 async function handle(file) {
-  if (!file?.type.startsWith('image/')) return status('Dat is geen afbeelding.');
-  if (busy) return status(backend ? 'Even geduld, de vorige foto is nog bezig.' : 'Even geduld, de rekenkern start nog.');
   if (!backend) return status('De rekenkern is niet beschikbaar; herlaad de pagina.');
   setBusy(true);
   name = file.name.replace(/\.[^.]+$/, '') || 'alphamaker';
@@ -91,6 +111,7 @@ async function handle(file) {
   } catch (e) {
     setBusy(false);
     status('Kon de foto niet openen: ' + e.message);
+    next();
   }
 }
 
@@ -132,7 +153,7 @@ function render() {
 
 setBusy(true);
 status('Rekenkern laden…');
-$('file').onchange = e => handle(e.target.files[0]);
+$('file').onchange = e => enqueue(e.target.files);
 $('model').onchange = showLicense;
 $('fijn').onchange = () => { $('groot').disabled = !$('fijn').checked; };
 $('bgmode').onchange = () => {
@@ -169,8 +190,9 @@ $('download').onclick = () => {
       x.putImageData(d, 0, 0); suffix = '-masker.png';
     }
   }
+  const file = name + suffix;  // nu vastleggen: bij 'Alles downloaden' wisselt name al voordat toBlob klaar is
   src.toBlob(b => {
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + suffix });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: file });
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
   }, type, 0.92);
@@ -178,5 +200,13 @@ $('download').onclick = () => {
 const drop = $('drop');
 drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');
-drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); handle(e.dataTransfer.files[0]); };
-addEventListener('paste', e => { const f = e.clipboardData.files[0]; if (f) handle(f); });
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); enqueue(e.dataTransfer.files); };
+addEventListener('paste', e => { const f = e.clipboardData.files[0]; if (f) enqueue([f]); });
+$('downloadAll').onclick = async () => {
+  for (const r of results) {
+    ({ name, cutout, box } = r);
+    render();
+    $('download').click();  // toBlob maakt meteen een kopie van het canvas
+    await new Promise(res => setTimeout(res, 400));  // browsers knijpen snelle reeksen downloads af
+  }
+};
