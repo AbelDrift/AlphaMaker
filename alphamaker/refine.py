@@ -46,6 +46,26 @@ def vitmatte(sess, rgb, tri):
     return out
 
 
+def tile_refine(predict, img, alpha, band):
+    """Segmentatiemodel opnieuw op tegels (max 1024 px) op volle resolutie, alleen waar de rand ligt;
+    alleen de randzone (trimap 'onzeker') wordt vervangen. predict: PIL-crop → alpha van die crop."""
+    tri = trimap(alpha, band)
+    h, w = alpha.shape
+    acc, wsum = np.zeros((h, w), np.float32), np.zeros((h, w), np.float32)
+    for y in _starts(h):
+        for x in _starts(w):
+            t = tri[y:y + TILE, x:x + TILE]
+            if not (t == 0.5).any(): continue
+            th, tw = t.shape
+            f = np.minimum.outer(_ramp(th), _ramp(tw)).astype(np.float32)
+            acc[y:y + th, x:x + tw] += predict(img.crop((x, y, x + tw, y + th))) * f
+            wsum[y:y + th, x:x + tw] += f
+    out = alpha.copy()
+    u = (tri == 0.5) & (wsum > 0)
+    out[u] = acc[u] / wsum[u]
+    return out
+
+
 def guided_filter(rgb, p, r, eps=1e-4):
     """Kleur-guided filter (He et al.): randen van p laten aansluiten op de foto."""
     box = lambda x: uniform_filter(x, size=2 * r + 1, mode='reflect')
@@ -89,4 +109,9 @@ if __name__ == '__main__':
     assert np.allclose(guided_filter(img, np.ones((40, 40), np.float32), 4), 1, atol=1e-3)
     fgc = foreground(np.full((30, 30, 3), 0.3, np.float32), al[:30, :30])
     assert np.allclose(fgc[al[:30, :30] > 0], 0.3, atol=1e-3)  # waar alpha=0 bestaat geen voorgrondkleur
+    from PIL import Image
+    big = np.zeros((1500, 1200), np.float32); big[300:1200, 300:900] = 1
+    half = tile_refine(lambda im: np.full((im.height, im.width), 0.5, np.float32), Image.new('RGB', (1200, 1500)), big, 5)
+    tb = trimap(big, 5)
+    assert np.allclose(half[tb == 0.5], 0.5) and (half[tb == 1] == 1).all() and (half[tb == 0] == 0).all()
     print('refine zelftest ok')

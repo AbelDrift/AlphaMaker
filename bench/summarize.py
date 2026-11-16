@@ -1,9 +1,10 @@
 """Vat results/*.jsonl samen tot results/SUMMARY.md (gesorteerd op rand-MAE, lager = beter)."""
-import json
+import json, os
 from pathlib import Path
 import numpy as np
 
-R = Path(__file__).resolve().parent.parent / 'results'
+S = os.environ.get('TESTSET', 'test')
+R = Path(__file__).resolve().parent.parent / 'results' / ('' if S == 'test' else S)
 rows = []
 for f in sorted(R.glob('*.jsonl')):
     d = [json.loads(l) for l in f.read_text().splitlines()]

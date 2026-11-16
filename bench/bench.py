@@ -1,12 +1,16 @@
 """Benchmark één achtergrond-model op data/test. Gebruik: bench.py <model>
 Hervatbaar: elke afbeelding wordt direct naar results/<model>.jsonl geschreven en overgeslagen bij herstart."""
-import json, sys, time, resource, subprocess
+import json, os, sys, time, resource, subprocess
 from pathlib import Path
 import numpy as np
 from PIL import Image
 from scipy.ndimage import binary_dilation
 
 ROOT = Path(__file__).resolve().parent.parent
+SET = os.environ.get('TESTSET', 'test')  # 'test' (≤1280 px) of 'test_hr' (≤3000 px)
+DATA = ROOT / 'data' / SET
+RES = ROOT / 'results' if SET == 'test' else ROOT / 'results' / SET
+PRED = ROOT / 'preds' if SET == 'test' else ROOT / 'preds' / SET
 REMBG = 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/'
 HF = 'https://huggingface.co/'
 IMNET = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
@@ -78,14 +82,14 @@ def load(name):
 
 
 def main(name):
-    out = ROOT / 'results' / (name + '.jsonl')
-    out.parent.mkdir(exist_ok=True)
+    out = RES / (name + '.jsonl')
+    out.parent.mkdir(parents=True, exist_ok=True)
     done = {json.loads(l)['img'] for l in out.read_text().splitlines()} if out.exists() else set()
-    imgs = sorted((ROOT / 'data/test').glob('*.jpg'))
+    imgs = sorted(DATA.glob('*.jpg'))
     todo = [p for p in imgs if p.stem not in done]
     if not todo: return print(name, 'al klaar')
     t0 = time.time(); run = load(name); print(name, f'geladen in {time.time()-t0:.1f}s', flush=True)
-    pd = ROOT / 'preds' / name; pd.mkdir(parents=True, exist_ok=True)
+    pd = PRED / name; pd.mkdir(parents=True, exist_ok=True)
     for p in todo:
         img = Image.open(p).convert('RGB')
         gt = np.asarray(Image.open(p.with_name(p.stem + '_gt.png')).convert('L'), np.float32) / 255

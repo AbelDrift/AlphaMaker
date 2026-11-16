@@ -112,3 +112,19 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - End-to-end getest: CLI met birefnet-general op portret (51 s, 4,3 GB, visueel schoon haar);
   `serve` met isnet: GET 200, POST foto → RGBA-PNG, ongeldige invoer → 400.
 - Open: webversie nog niet in echte browser getest; remove.bg-vergelijking vraagt API-sleutel.
+
+## Onderzoek remove.bg, deel 2 (2026-11-16 05:15)
+- **Voorwaarden remove.bg (remove.bg/tos, art. 5.2):** verboden: (ii) reverse-engineeren/decompileren,
+  (iii) gebruik voor prestatiebenchmarks, (iv) gebruik om een concurrerend product te bouwen,
+  (vi) data mining/scraping. → GEEN vergelijking via hun API (eerder voorstel ingetrokken), geen
+  analyse van hun client/dienst. Alleen openbare bronnen. Art. 6.9: remove.bg krijgt een eeuwigdurende
+  licentie op uploads (privacy-argument voor lokaal werken).
+- Openbaar gevonden: Kaleido bouwde voort op bestaande ontwerpen (trendingtopics); Scale-case study
+  (via zoekfragment): randgevallen aangepakt met ~500 echte + ~15.000 synthetische beelden;
+  50 MP-aankondiging: originele resolutie tot 50 MP (ZIP/JPG), PNG max 10 MP. Geen octrooien of papers
+  van Kaleido gevonden (USPTO-zoekresultaten waren van andere bedrijven).
+- Volgende experiment: hoge resolutie (testset `data/test_hr`, ≤3000 px): basis vs. BiRefNet op
+  randtegels op volle resolutie ('st') vs. ViTMatte vs. guided filter.
+- HR-experiment draait: unit `alphamaker-hr` (`bench/queue_hr.sh`, TESTSET=test_hr), resultaten in
+  `results/test_hr/`, samenvatting: `TESTSET=test_hr .venv/bin/python bench/summarize.py`.
+  Nieuwe functie `refine.tile_refine` (basismodel opnieuw op randtegels op volle resolutie).

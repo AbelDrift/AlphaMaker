@@ -20,19 +20,20 @@ def save(name, img, gt):
     gt.save(OUT / f'{name}_gt.png')
 
 
-f = pq.ParquetFile(ROOT / 'data/raw/dis_te1.parquet')
-for g in range(f.metadata.num_row_groups):  # één rijgroep (~100 rijen) tegelijk in geheugen
-    t = f.read_row_group(g, columns=['image', 'label', 'image_name']).to_pylist()
-    for i in (0, 50):
-        r = t[i]
-        save('dis_' + Path(r['image_name']).stem[:40],
-             Image.open(io.BytesIO(r['image']['bytes'])), Image.open(io.BytesIO(r['label']['bytes'])))
+if __name__ == '__main__':
+    f = pq.ParquetFile(ROOT / 'data/raw/dis_te1.parquet')
+    for g in range(f.metadata.num_row_groups):  # één rijgroep (~100 rijen) tegelijk in geheugen
+        t = f.read_row_group(g, columns=['image', 'label', 'image_name']).to_pylist()
+        for i in (0, 50):
+            r = t[i]
+            save('dis_' + Path(r['image_name']).stem[:40],
+                 Image.open(io.BytesIO(r['image']['bytes'])), Image.open(io.BytesIO(r['label']['bytes'])))
 
-z = zipfile.ZipFile(ROOT / 'data/raw/ppm100.zip')
-names = sorted(n for n in z.namelist() if n.startswith('PPM-100/val/fg/') and n.endswith('.jpg'))
-for n in names[:8]:
-    m = n.replace('/fg/', '/alpha/')
-    m = next(x for x in z.namelist() if x.rsplit('.', 1)[0] == m.rsplit('.', 1)[0])
-    save('ppm_' + Path(n).stem, Image.open(z.open(n)), Image.open(z.open(m)))
+    z = zipfile.ZipFile(ROOT / 'data/raw/ppm100.zip')
+    names = sorted(n for n in z.namelist() if n.startswith('PPM-100/val/fg/') and n.endswith('.jpg'))
+    for n in names[:8]:
+        m = n.replace('/fg/', '/alpha/')
+        m = next(x for x in z.namelist() if x.rsplit('.', 1)[0] == m.rsplit('.', 1)[0])
+        save('ppm_' + Path(n).stem, Image.open(z.open(n)), Image.open(z.open(m)))
 
-print(len(list(OUT.glob('*.jpg'))), 'testbeelden in', OUT)
+    print(len(list(OUT.glob('*.jpg'))), 'testbeelden in', OUT)
