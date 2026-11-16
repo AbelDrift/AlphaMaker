@@ -51,6 +51,7 @@ worker.onmessage = ({ data: m }) => {
   bar();
   if (m.type === 'error') return status('Mislukt: ' + m.message);
   cutout = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
+  box = subjectBox(cutout);
   render();
   $('result').hidden = false;
   $('download').disabled = false;
@@ -93,16 +94,39 @@ async function handle(file) {
   }
 }
 
+let bgImg = null, box = null;  // achtergrondfoto en onderwerp-kader van de huidige uitsnede
+
+function subjectBox({ width: w, height: h, data }) {  // kleinste rechthoek met alpha > 8, zoals core.finish
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (data[4 * (y * w + x) + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
+// afwerking zoals core.finish (bijsnijden + marge, achtergrondkleur/-foto, schaduw), alles lokaal op canvas
 function render() {
-  const c = $('out'), ctx = c.getContext('2d');
-  c.width = cutout.width; c.height = cutout.height;
-  ctx.putImageData(cutout, 0, 0);
-  if ($('bgmode').value === 'color') {
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.fillStyle = $('bgcolor').value;
-    ctx.fillRect(0, 0, c.width, c.height);
-    ctx.globalCompositeOperation = 'source-over';
+  const src = Object.assign(document.createElement('canvas'), { width: cutout.width, height: cutout.height });
+  src.getContext('2d').putImageData(cutout, 0, 0);
+  let r = { x: 0, y: 0, w: cutout.width, h: cutout.height };
+  if ($('crop').checked && box) {
+    const m = Math.min(50, Math.max(0, Number($('margin').value) || 0)) / 100, mx = Math.round(box.w * m), my = Math.round(box.h * m);
+    const x = Math.max(0, box.x - mx), y = Math.max(0, box.y - my);
+    r = { x, y, w: Math.min(cutout.width, box.x + box.w + mx) - x, h: Math.min(cutout.height, box.y + box.h + my) - y };
   }
+  const c = $('out'), ctx = c.getContext('2d');
+  c.width = r.w; c.height = r.h;
+  const mode = $('bgmode').value;
+  if (mode === 'color') { ctx.fillStyle = $('bgcolor').value; ctx.fillRect(0, 0, r.w, r.h); }
+  if (mode === 'image' && bgImg) {  // 'cover': vullen en bijsnijden, zoals ImageOps.fit
+    const s = Math.max(r.w / bgImg.width, r.h / bgImg.height), bw = bgImg.width * s, bh = bgImg.height * s;
+    ctx.drawImage(bgImg, (r.w - bw) / 2, (r.h - bh) / 2, bw, bh);
+  }
+  if ($('shadow').checked) {  // zachte slagschaduw: ~1% van de lange zijde, 50% dekking
+    const d = Math.max(2, Math.round(Math.max(r.w, r.h) * 0.01));
+    Object.assign(ctx, { shadowColor: 'rgba(0,0,0,0.5)', shadowBlur: 2 * d, shadowOffsetX: d, shadowOffsetY: d });
+  }
+  ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+  src.width = src.height = 0;
 }
 
 setBusy(true);
@@ -110,8 +134,21 @@ status('Rekenkern laden…');
 $('file').onchange = e => handle(e.target.files[0]);
 $('model').onchange = showLicense;
 $('fijn').onchange = () => { $('groot').disabled = !$('fijn').checked; };
-$('bgmode').onchange = () => { $('bgcolor').hidden = $('bgmode').value !== 'color'; render(); };
-$('bgcolor').oninput = render;
+$('bgmode').onchange = () => {
+  $('bgcolor').hidden = $('bgmode').value !== 'color';
+  $('bgimage').hidden = $('bgmode').value !== 'image';
+  if (cutout) render();
+};
+$('bgcolor').oninput = () => cutout && render();
+$('bgimage').onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  bgImg?.close();
+  bgImg = await createImageBitmap(f).catch(() => null);
+  if (!bgImg) status('Kon de achtergrondfoto niet openen.');
+  if (cutout) render();
+};
+for (const id of ['crop', 'margin', 'shadow']) $(id).oninput = () => cutout && render();
 $('download').onclick = () => $('out').toBlob(b => {
   const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + '-alpha.png' });
   a.click();

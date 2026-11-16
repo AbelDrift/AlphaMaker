@@ -79,6 +79,7 @@ Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met Web
 - Met WebGPU is BiRefNet de standaard (466 MB, eenmalig downloaden).
 - Zonder WebGPU wordt het RMBG-1.4 (niet-commercieel). De BiRefNet-modellen passen in ONNX niet binnen de 4 GB die WebAssembly maximaal mag gebruiken.
 - Foto's groter dan 12 megapixel worden eerst verkleind.
+- Afwerken zoals in de Python-app: achtergrondkleur of -foto, bijsnijden tot het onderwerp (met marge) en schaduw.
 
 De rekenstappen zijn getest tegen de Python-versie (`node --test tests/web/`). Een rooktest in headless Firefox (`tests/web/run_browser_smoke.sh`) verwerkt een echte foto: zonder WebGPU klaar in 27 s, zonder consolefouten.
 

@@ -137,6 +137,8 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   objecten 0.165) · general+st24 0.1374 (392 s) · lite 0.1391 · lite+vm24 0.1404 · lite+gf8 0.1496.
   → Standaard (general, geen verfijning) blijft het beste, ook op hoge resolutie. tile_refine blijft
   alleen als onderzoeksfunctie (niet in de app-opties).
+- Webversie heeft nu ook afwerkopties (achtergrondfoto, bijsnijden+marge, schaduw); rooktest controleert
+  bijsnijden+schaduw+kleur (761×853, volledig dekkend).
 - Browser-rooktest (headless Firefox 153 ESR, WebDriver BiDi, WASM 1 kern, rmbg-1.4-licht):
   klaar in 27 s, 1280×853, 63% transparant, 4,7% halfdoorzichtig, 0 consolemeldingen. Script:
   `tests/web/run_browser_smoke.sh [foto] [model]` (max 3 GB). WebGPU-pad niet getest (geen GPU hier).

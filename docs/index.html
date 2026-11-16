@@ -63,9 +63,13 @@
     </div>
     <div class="tools">
       <label>Achtergrond
-        <select id="bgmode"><option value="none">Transparant</option><option value="color">Kleur</option></select>
+        <select id="bgmode"><option value="none">Transparant</option><option value="color">Kleur</option><option value="image">Foto</option></select>
       </label>
       <input id="bgcolor" type="color" value="#ffffff" aria-label="Achtergrondkleur" hidden>
+      <input id="bgimage" type="file" accept="image/*" aria-label="Achtergrondfoto kiezen" hidden>
+      <label class="opt"><input id="crop" type="checkbox"> Bijsnijden tot onderwerp</label>
+      <label class="opt">Marge <input id="margin" type="number" min="0" max="50" step="1" value="5" style="width:4em"> %</label>
+      <label class="opt"><input id="shadow" type="checkbox"> Schaduw</label>
       <button id="download" class="primary">Download PNG</button>
     </div>
   </section>
