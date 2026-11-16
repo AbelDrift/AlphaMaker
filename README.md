@@ -61,6 +61,12 @@ pip install -e .
 alphamaker foto.jpg                          # → foto-alpha.png
 alphamaker *.jpg -o uitvoer/ --model birefnet-lite
 alphamaker serve                             # webpagina op http://127.0.0.1:8092
+
+# afwerken zoals bij remove.bg (alles lokaal):
+alphamaker foto.jpg --bijsnijden --marge 0.05        # bijsnijden tot het onderwerp, 5% marge
+alphamaker foto.jpg --achtergrond '#ffffff' --formaat jpg
+alphamaker foto.jpg --achtergrondfoto strand.jpg --schaduw
+alphamaker foto.jpg --alleen-masker                  # alleen het alfamasker (grijswaarden)
 ```
 
 Zonder PyTorch werkt AlphaMaker ook, maar dan met het lichtere IS-Net (ONNX). Modellen worden bij eerste gebruik gedownload naar `~/.cache/alphamaker` (code en gewichten van vaste revisies). Reken voor BiRefNet general op zo'n 4 GB vrij geheugen; `--model birefnet-lite` heeft genoeg aan 2,6 GB.
