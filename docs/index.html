@@ -81,6 +81,14 @@
   </section>
   <footer><p>Open source (MIT): <a href="https://github.com/AbelDrift/AlphaMaker">GitHub</a> · <a href="https://codeberg.org/AbelDrift/AlphaMaker">Codeberg</a>. Alles rekent in je eigen browser; je foto wordt nergens heen gestuurd.</p></footer>
 </main>
+<script>
+  // eenmalig herladen onder de service worker → meerdere kernen voor WebAssembly (zie coi.js)
+  if (!self.crossOriginIsolated && 'serviceWorker' in navigator && !sessionStorage.getItem('coi'))
+    navigator.serviceWorker.register('coi.js').then(() => {
+      sessionStorage.setItem('coi', '1');  // nooit in een herlaadlus belanden
+      if (!navigator.serviceWorker.controller) location.reload();
+    }).catch(() => {});
+</script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

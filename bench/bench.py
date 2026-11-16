@@ -21,6 +21,7 @@ MODELS = {
     'u2net':            (REMBG + 'u2net.onnx', 320, IMNET, 'minmax'),
     'isnet-general':    (REMBG + 'isnet-general-use.onnx', 1024, HALF, 'minmax'),
     'rmbg-1.4':         (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model.onnx', 1024, HALF, 'minmax'),
+    'rmbg-1.4-q':       (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model_quantized.onnx', 1024, HALF, 'minmax'),  # webversie 'licht'
     'birefnet-lite':    (REMBG + 'BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx', 1024, IMNET, 'sigmoid'),
     'birefnet-general': (REMBG + 'BiRefNet-general-epoch_244.onnx', 1024, IMNET, 'sigmoid'),
     'birefnet-portrait':(REMBG + 'BiRefNet-portrait-epoch_150.onnx', 1024, IMNET, 'sigmoid'),

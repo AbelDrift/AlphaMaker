@@ -25,10 +25,13 @@ const evaluate = async expression => (await send('script.evaluate',
   { expression, target: { context }, awaitPromise: true, resultOwnership: 'none' })).result?.value;
 await send('browsingContext.navigate', { context, url, wait: 'complete' });
 
-const status = () => evaluate(`document.getElementById('status').textContent`);
+// de pagina herlaadt zichzelf eenmalig onder de service worker (coi.js): tijdens herladen faalt evaluate even
+const status = () => evaluate(`document.getElementById('status').textContent`).catch(() => 'laden');
 let t0 = Date.now(), s = '';
 while (Date.now() - t0 < 60_000 && /laden/i.test(s = await status() ?? 'laden')) await sleep(1000);
-console.log('rekenkern:', await evaluate(`document.getElementById('engine').textContent`));
+await sleep(1500);
+while (Date.now() - t0 < 60_000 && /laden/i.test(s = await status() ?? 'laden')) await sleep(1000);
+console.log('rekenkern:', await evaluate(`document.getElementById('engine')?.textContent ?? ''`), '| geïsoleerd:', await evaluate('self.crossOriginIsolated').catch(() => '?'));
 
 // lichtste model kiezen en de foto via het uploadveld aanbieden (zoals een gebruiker)
 console.log('model:', await evaluate(`(() => { const s = document.getElementById('model'); s.value = ${JSON.stringify(model)}; s.dispatchEvent(new Event('change')); return s.value; })()`));

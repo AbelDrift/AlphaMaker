@@ -6,7 +6,7 @@ const status = t => { $('status').textContent = t; };
 const mb = bytes => Math.round(bytes / 2 ** 20);
 const worker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
 let backend, cutout, busy, name = 'alphamaker', note = '';
-let source = null, origP = null, pending = null;  // originele foto van het huidige resultaat (voor 'Herstellen')
+let source = null, origP = null, pending = null, full = null;  // full: originele maat als de foto voor het rekenen verkleind is  // originele foto van het huidige resultaat (voor 'Herstellen')
 
 function setBusy(b) {
   busy = b;
@@ -46,6 +46,23 @@ function ready(m) {
   next();  // foto's die al klaarstonden terwijl de rekenkern startte
 }
 
+const MAX_OUTPUT = 50_000_000;  // zoals remove.bg; daarboven blijft het resultaat verkleind
+
+// Resultaat (berekend op ≤12 MP) naar de originele maat: alfa en randkleuren opschalen, maar waar het
+// onderwerp volledig dekt de originele (scherpe) pixels houden.
+async function fullSize(small, file, { w, h }) {
+  const canvas = (cw, ch) => Object.assign(document.createElement('canvas'), { width: cw, height: ch });
+  const s = canvas(small.width, small.height); s.getContext('2d').putImageData(small, 0, 0);
+  const up = canvas(w, h), ux = up.getContext('2d', { willReadFrequently: true });
+  ux.imageSmoothingQuality = 'high'; ux.drawImage(s, 0, 0, w, h);
+  const bmp = await createImageBitmap(file), o = canvas(w, h), ox = o.getContext('2d', { willReadFrequently: true });
+  ox.drawImage(bmp, 0, 0, w, h); bmp.close();
+  const res = ux.getImageData(0, 0, w, h), d = res.data, src = ox.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3] === 255) { d[i] = src[i]; d[i + 1] = src[i + 1]; d[i + 2] = src[i + 2]; }
+  s.width = s.height = up.width = up.height = o.width = o.height = 0;  // canvasgeheugen vrijgeven
+  return res;
+}
+
 // wachtrij voor meerdere foto's (zoals de bulkfunctie van remove.bg)
 const queue = [], results = [];  // shortcut: max 20 resultaten (ImageData) in geheugen; daarna valt de oudste af
 function enqueue(files) {
@@ -65,18 +82,23 @@ function showList() {
   $('list').hidden = $('downloadAll').hidden = results.length < 2;
 }
 
-worker.onmessage = ({ data: m }) => {
+worker.onmessage = async ({ data: m }) => {
   if (m.type === 'ready') return ready(m);
   if (m.type === 'progress') { status(m.text); return bar(m.frac); }
+  if (m.type === 'error') { setBusy(false); bar(); status('Mislukt: ' + m.message); return next(); }
+  cutout = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
+  if (full) {  // nog 'bezig' houden: anders kan een nieuwe foto name/pending overschrijven tijdens het wachten
+    status('Terug naar de volledige resolutie…');
+    cutout = await fullSize(cutout, pending, full).catch(() => cutout);  // lukt het niet: verkleind resultaat
+  }
   setBusy(false);
   bar();
-  if (m.type === 'error') { status('Mislukt: ' + m.message); return next(); }
-  cutout = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
   box = subjectBox(cutout);
   render();
   $('result').hidden = false;
   $('download').disabled = false;
   source = pending; origP = null;
+  for (let n = 2, base = name; results.some(r => r.name === name); n++) name = `${base} (${n})`;  // dubbele namen onderscheiden
   results.push({ name, cutout, box, file: source });
   if (results.length > 20) results.shift();
   showList();
@@ -96,12 +118,15 @@ async function handle(file) {
     status('Foto openen…');
     const bmp = await createImageBitmap(file);
     let w = bmp.width, h = bmp.height;
-    note = '';
+    note = ''; full = null;
     if (w * h > MAX_PIXELS) {
-      const s = Math.sqrt(MAX_PIXELS / (w * h)), w0 = w, h0 = h;
+      const s = Math.sqrt(MAX_PIXELS / (w * h));
+      if (w * h <= MAX_OUTPUT) full = { w, h };  // daarna weer naar de volle maat
+      const w0 = w, h0 = h;
       w = Math.max(1, Math.floor(w * s));
       h = Math.max(1, Math.floor(h * s));
-      note = `De foto is verkleind van ${w0}×${h0} naar ${w}×${h} pixels: in de browser kan maximaal ${MAX_PIXELS / 1e6} megapixel.`;
+      note = full ? `Berekend op ${MAX_PIXELS / 1e6} megapixel en toegepast op de volledige foto (${w0}×${h0}).`
+        : `De foto is verkleind van ${w0}×${h0} naar ${w}×${h} pixels: groter dan ${MAX_OUTPUT / 1e6} megapixel kan niet in de browser.`;
       status(note);
     }
     const ctx = Object.assign(document.createElement('canvas'), { width: w, height: h }).getContext('2d', { willReadFrequently: true });

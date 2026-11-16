@@ -188,3 +188,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   bedrijven) → adversariële verificatie per kandidaat → testplan. Hervatten: Workflow met scriptPath
   `~/.claude/projects/-home-abel-claude-algemeen/63eeee7a-6517-415a-ba3c-8a163a78d5ff/workflows/scripts/alphamaker-nieuwe-modellen-wf_ceeab066-8ef.js`
   + resumeFromRunId. Daarna: kandidaten één voor één benchmarken op test_clean + test_clean2 (150 beelden).
+- 2026-11-16 ~19:45: webversie: (1) volle resolutie tot 50 MP (rekenen op 12 MP, alfa/randkleur opschalen, dekkende pixels uit origineel; test 17 MP → 5100×3400), (2) service worker coi.js → crossOriginIsolated → WASM multithread: 27,1 → 11,8 s in Firefox, (3) unieke namen in lijst, race bij opschalen voorkomen (busy tot klaar).
