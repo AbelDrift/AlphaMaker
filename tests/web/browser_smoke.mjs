@@ -8,7 +8,10 @@ const pending = new Map(), logs = [];
 ws.onmessage = ({ data }) => {
   const m = JSON.parse(data);
   if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
-  else if (m.method === 'log.entryAdded') logs.push(`${m.params.level}: ${m.params.text}`);
+  else if (m.method === 'log.entryAdded') {
+    const f = m.params.stackTrace?.callFrames?.[0];
+    logs.push(`${m.params.level}: ${m.params.text}` + (f ? ` (${f.url.split('/').pop()}:${f.lineNumber + 1})` : ''));
+  }
 };
 const send = (method, params = {}) => new Promise((res, rej) => {
   const n = ++id;

@@ -5,6 +5,9 @@ self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const r = e.request;
+  // alleen eigen bestanden: grote downloads (Hugging Face) niet door de worker sturen; Firefox stopt een
+  // service worker na een tijdje, ook midden in een stream. Externe bronnen gaan al met CORS, dat volstaat.
+  if (new URL(r.url).origin !== self.location.origin) return;
   if (r.cache === 'only-if-cached' && r.mode !== 'same-origin') return;
   e.respondWith(fetch(r).then(res => {
     if (res.status === 0) return res;  // ondoorzichtig antwoord: ongewijzigd laten
