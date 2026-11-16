@@ -48,10 +48,15 @@
     </div>
     <div class="tools">
       <label>Achtergrond
-        <select id="bgmode"><option value="none">Transparant</option><option value="color">Kleur</option></select>
+        <select id="bgmode"><option value="none">Transparant</option><option value="color">Kleur</option><option value="image">Foto</option></select>
       </label>
       <input id="bgcolor" type="color" value="#ffffff" aria-label="Achtergrondkleur" hidden>
-      <button id="download" class="primary">Download PNG</button>
+      <input id="bgimage" type="file" accept="image/*" aria-label="Achtergrondfoto kiezen" hidden>
+      <label class="opt"><input id="crop" type="checkbox"> Bijsnijden tot onderwerp</label>
+      <label class="opt">Marge <input id="margin" type="number" min="0" max="50" step="1" value="5" style="width:4em"> %</label>
+      <label class="opt"><input id="shadow" type="checkbox"> Schaduw</label>
+      <label>Bestand <select id="format"><option value="png">PNG (transparant)</option><option value="jpg">JPG</option><option value="mask">Alleen masker (PNG)</option></select></label>
+      <button id="download" class="primary">Download</button>
     </div>
   </section>
 </main>
@@ -78,6 +83,7 @@ async function handle(file) {
     const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
     const ctx = c.getContext('2d'); ctx.drawImage(bmp, 0, 0);
     cutout = ctx.getImageData(0, 0, c.width, c.height);
+    box = subjectBox(cutout);
     render();
     $('result').hidden = false;
     $('download').disabled = false;
@@ -87,25 +93,84 @@ async function handle(file) {
   } finally { busy = false; }
 }
 
+// overgenomen uit docs/app.js: houd beide gelijk
+let bgImg = null, box = null, rect = null;  // achtergrondfoto, onderwerp-kader en getoonde uitsnede
+
+function subjectBox({ width: w, height: h, data }) {  // kleinste rechthoek met alpha > 8, zoals core.finish
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (data[4 * (y * w + x) + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
+// afwerking zoals core.finish (bijsnijden + marge, achtergrondkleur/-foto, schaduw), alles lokaal op canvas
 function render() {
-  const c = $('out'), ctx = c.getContext('2d');
-  c.width = cutout.width; c.height = cutout.height;
-  ctx.putImageData(cutout, 0, 0);
-  if ($('bgmode').value === 'color') {
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.fillStyle = $('bgcolor').value;
-    ctx.fillRect(0, 0, c.width, c.height);
-    ctx.globalCompositeOperation = 'source-over';
+  const src = Object.assign(document.createElement('canvas'), { width: cutout.width, height: cutout.height });
+  src.getContext('2d').putImageData(cutout, 0, 0);
+  let r = { x: 0, y: 0, w: cutout.width, h: cutout.height };
+  if ($('crop').checked && box) {
+    const m = Math.min(50, Math.max(0, Number($('margin').value) || 0)) / 100, mx = Math.round(box.w * m), my = Math.round(box.h * m);
+    const x = Math.max(0, box.x - mx), y = Math.max(0, box.y - my);
+    r = { x, y, w: Math.min(cutout.width, box.x + box.w + mx) - x, h: Math.min(cutout.height, box.y + box.h + my) - y };
   }
+  const c = $('out'), ctx = c.getContext('2d');
+  c.width = r.w; c.height = r.h;
+  rect = r;
+  const mode = $('bgmode').value;
+  if (mode === 'color') { ctx.fillStyle = $('bgcolor').value; ctx.fillRect(0, 0, r.w, r.h); }
+  if (mode === 'image' && bgImg) {  // 'cover': vullen en bijsnijden, zoals ImageOps.fit
+    const s = Math.max(r.w / bgImg.width, r.h / bgImg.height), bw = bgImg.width * s, bh = bgImg.height * s;
+    ctx.drawImage(bgImg, (r.w - bw) / 2, (r.h - bh) / 2, bw, bh);
+  }
+  if ($('shadow').checked) {  // zachte slagschaduw: ~1% van de lange zijde, 50% dekking
+    const d = Math.max(2, Math.round(Math.max(r.w, r.h) * 0.01));
+    Object.assign(ctx, { shadowColor: 'rgba(0,0,0,0.5)', shadowBlur: 2 * d, shadowOffsetX: d, shadowOffsetY: d });
+  }
+  ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+  src.width = src.height = 0;
 }
 
 $('file').onchange = e => handle(e.target.files[0]);
-$('bgmode').onchange = () => { $('bgcolor').hidden = $('bgmode').value !== 'color'; render(); };
-$('bgcolor').oninput = render;
-$('download').onclick = () => $('out').toBlob(b => {
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + '-alpha.png' });
-  a.click();
-});
+$('bgmode').onchange = () => {
+  $('bgcolor').hidden = $('bgmode').value !== 'color';
+  $('bgimage').hidden = $('bgmode').value !== 'image';
+  if (cutout) render();
+};
+$('bgcolor').oninput = () => cutout && render();
+$('bgimage').onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  bgImg?.close();
+  bgImg = await createImageBitmap(f).catch(() => null);
+  if (!bgImg) status('Kon de achtergrondfoto niet openen.');
+  if (cutout) render();
+};
+for (const id of ['crop', 'margin', 'shadow']) $(id).oninput = () => cutout && render();
+// PNG (transparant), JPG (witte ondergrond) of alleen het masker (alfa als grijswaarden, zoals remove.bg channels=alpha)
+$('download').onclick = () => {
+  const fmt = $('format').value, c = $('out');
+  let src = c, type = 'image/png', suffix = '-alpha.png';
+  if (fmt !== 'png') {
+    src = Object.assign(document.createElement('canvas'), { width: c.width, height: c.height });
+    const x = src.getContext('2d');
+    if (fmt === 'jpg') {
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(c, 0, 0);
+      type = 'image/jpeg'; suffix = '-alpha.jpg';
+    } else {
+      const d = x.createImageData(rect.w, rect.h);
+      for (let y = 0; y < rect.h; y++) for (let i = 0; i < rect.w; i++) {
+        const a = cutout.data[4 * ((y + rect.y) * cutout.width + i + rect.x) + 3], j = 4 * (y * rect.w + i);
+        d.data[j] = d.data[j + 1] = d.data[j + 2] = a; d.data[j + 3] = 255;
+      }
+      x.putImageData(d, 0, 0); suffix = '-masker.png';
+    }
+  }
+  src.toBlob(b => {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + suffix });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }, type, 0.92);
+};
 const drop = $('drop');
 drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');

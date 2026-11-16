@@ -159,3 +159,7 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - BESLUIT: app-standaard **inspyrenet** (transparent-background); birefnet-general aanbevolen voor portretten.
   Web-standaard **rmbg-1.4** (beide backends; NC vermeld), BiRefNet optioneel ("beste voor haar").
 - E2E: CLI met inspyrenet + --bijsnijden op DIS-fietsframe: 25 s, 3,7 GB, RGBA bijgesneden. README herschreven.
+- 2026-11-16 ~10:30: CLI `--type persoon` (→ birefnet-general); `tests/test_core.py` (afwerking + CLI, zonder
+  modellen). Webversie: downloaden als PNG/JPG/alleen masker. Lokale `serve`-pagina heeft nu dezelfde
+  afwerking (code overgenomen uit docs/app.js — houd gelijk); getest in headless Firefox tegen serve (isnet):
+  2,4 s, afwerking ok, 0 consolemeldingen. Rooktest werkt ook tegen serve (foto als data-URL ≤128 KB).
