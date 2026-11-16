@@ -15,6 +15,6 @@ jobs:
       - name: syntax webversie
         run: for f in docs/*.js tests/web/*.mjs; do node --check "$f"; done
       - name: pariteit webversie ↔ Python (zonder modellen)
-        run: node --test tests/web/
+        run: node --test tests/web/refine.test.mjs
       - name: Python-tests (zonder modellen)
         run: python tests/test_core.py && python alphamaker/refine.py

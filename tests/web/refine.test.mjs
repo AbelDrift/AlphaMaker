@@ -1,5 +1,5 @@
 // Pariteit van docs/refine.js met alphamaker/refine.py, core.py, scipy en PIL.
-// Fixtures: .venv/bin/python -I bench/make_web_fixtures.py   Draai: node --test tests/web/
+// Fixtures: .venv/bin/python -I bench/make_web_fixtures.py   Draai: node --test tests/web/refine.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

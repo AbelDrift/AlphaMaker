@@ -92,7 +92,7 @@ Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met Web
 - Meerdere foto's tegelijk: ze worden na elkaar verwerkt en zijn samen te downloaden.
 - Met de hand bijwerken: een gum en een herstelpenseel (originele pixels terug), zoals in de editor van remove.bg.
 
-De rekenstappen zijn getest tegen de Python-versie (`node --test tests/web/`). Een rooktest in headless Firefox (`tests/web/run_browser_smoke.sh`) verwerkt een echte foto: zonder WebGPU klaar in 27 s, zonder consolefouten.
+De rekenstappen zijn getest tegen de Python-versie (`node --test tests/web/refine.test.mjs`). Een rooktest in headless Firefox (`tests/web/run_browser_smoke.sh`) verwerkt een echte foto: zonder WebGPU klaar in 27 s, zonder consolefouten.
 
 ## Benchmark zelf draaien
 
