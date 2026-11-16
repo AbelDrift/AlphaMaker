@@ -63,6 +63,8 @@ const finish = await evaluate(`(() => {
   return c.width + 'x' + c.height + ', niet-dekkend ' + t;
 })()`);
 console.log('afwerking (bijsnijden+schaduw+kleur):', finish);
+const fmt = await evaluate(`(() => { const f = document.getElementById('format'); return [...f.options].map(o => o.value).join(',') + ' / knop: ' + document.getElementById('download').textContent; })()`);
+console.log('formaten:', fmt);
 const finishOk = /niet-dekkend 0$/.test(finish ?? '') && finish.split(',')[0] !== stats.split(',')[0];
 console.log('console:', logs.length ? '\n  ' + logs.join('\n  ') : 'geen meldingen');
 await send('session.end').catch(() => {});

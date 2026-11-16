@@ -70,7 +70,8 @@
       <label class="opt"><input id="crop" type="checkbox"> Bijsnijden tot onderwerp</label>
       <label class="opt">Marge <input id="margin" type="number" min="0" max="50" step="1" value="5" style="width:4em"> %</label>
       <label class="opt"><input id="shadow" type="checkbox"> Schaduw</label>
-      <button id="download" class="primary">Download PNG</button>
+      <label>Bestand <select id="format"><option value="png">PNG (transparant)</option><option value="jpg">JPG</option><option value="mask">Alleen masker (PNG)</option></select></label>
+      <button id="download" class="primary">Download</button>
     </div>
   </section>
   <footer><p>Open source (MIT): <a href="https://github.com/AbelDrift/AlphaMaker">GitHub</a> · <a href="https://codeberg.org/AbelDrift/AlphaMaker">Codeberg</a>. Alles rekent in je eigen browser; je foto wordt nergens heen gestuurd.</p></footer>

@@ -94,7 +94,7 @@ async function handle(file) {
   }
 }
 
-let bgImg = null, box = null;  // achtergrondfoto en onderwerp-kader van de huidige uitsnede
+let bgImg = null, box = null, rect = null;  // achtergrondfoto, onderwerp-kader en getoonde uitsnede
 
 function subjectBox({ width: w, height: h, data }) {  // kleinste rechthoek met alpha > 8, zoals core.finish
   let x0 = w, y0 = h, x1 = -1, y1 = -1;
@@ -115,6 +115,7 @@ function render() {
   }
   const c = $('out'), ctx = c.getContext('2d');
   c.width = r.w; c.height = r.h;
+  rect = r;
   const mode = $('bgmode').value;
   if (mode === 'color') { ctx.fillStyle = $('bgcolor').value; ctx.fillRect(0, 0, r.w, r.h); }
   if (mode === 'image' && bgImg) {  // 'cover': vullen en bijsnijden, zoals ImageOps.fit
@@ -149,11 +150,31 @@ $('bgimage').onchange = async e => {
   if (cutout) render();
 };
 for (const id of ['crop', 'margin', 'shadow']) $(id).oninput = () => cutout && render();
-$('download').onclick = () => $('out').toBlob(b => {
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + '-alpha.png' });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-});
+// PNG (transparant), JPG (witte ondergrond) of alleen het masker (alfa als grijswaarden, zoals remove.bg channels=alpha)
+$('download').onclick = () => {
+  const fmt = $('format').value, c = $('out');
+  let src = c, type = 'image/png', suffix = '-alpha.png';
+  if (fmt !== 'png') {
+    src = Object.assign(document.createElement('canvas'), { width: c.width, height: c.height });
+    const x = src.getContext('2d');
+    if (fmt === 'jpg') {
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(c, 0, 0);
+      type = 'image/jpeg'; suffix = '-alpha.jpg';
+    } else {
+      const d = x.createImageData(rect.w, rect.h);
+      for (let y = 0; y < rect.h; y++) for (let i = 0; i < rect.w; i++) {
+        const a = cutout.data[4 * ((y + rect.y) * cutout.width + i + rect.x) + 3], j = 4 * (y * rect.w + i);
+        d.data[j] = d.data[j + 1] = d.data[j + 2] = a; d.data[j + 3] = 255;
+      }
+      x.putImageData(d, 0, 0); suffix = '-masker.png';
+    }
+  }
+  src.toBlob(b => {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: name + suffix });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }, type, 0.92);
+};
 const drop = $('drop');
 drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');
