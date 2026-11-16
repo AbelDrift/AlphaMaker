@@ -131,3 +131,12 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - 2026-11-16 ~07:00: webversie LIVE op https://abeldrift.github.io/AlphaMaker/ (Pages: main /docs) en
   https://abeldrift.codeberg.page/AlphaMaker/ (git-pages-webhook; deploy = nieuwe push naar `pages`:
   `git subtree split --prefix docs -b pages && git push -f codeberg pages`). Abel besloot: repo's blijven openbaar.
+
+## Hoge resolutie + browsertest (2026-11-16 07:45)
+- test_hr (12×~3000 px), rand-MAE: general 0.1224 (37 s) · lite+st24 0.1346 (285 s; haar 0.119 maar
+  objecten 0.165) · general+st24 0.1374 (392 s) · lite 0.1391 · lite+vm24 0.1404 · lite+gf8 0.1496.
+  → Standaard (general, geen verfijning) blijft het beste, ook op hoge resolutie. tile_refine blijft
+  alleen als onderzoeksfunctie (niet in de app-opties).
+- Browser-rooktest (headless Firefox 153 ESR, WebDriver BiDi, WASM 1 kern, rmbg-1.4-licht):
+  klaar in 27 s, 1280×853, 63% transparant, 4,7% halfdoorzichtig, 0 consolemeldingen. Script:
+  `tests/web/run_browser_smoke.sh [foto] [model]` (max 3 GB). WebGPU-pad niet getest (geen GPU hier).

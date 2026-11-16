@@ -29,6 +29,7 @@ Achtergrond verwijderen met de beste open modellen, **op je eigen apparaat**: al
 
 - **rand-MAE** is de gemiddelde fout in de randzone (halfdoorzichtige pixels plus een band van 8 px rond de contour). Daar zie je verschil in haar en fijne details. **MAE** is de fout over het hele beeld, **IoU** de overlap van het masker.
 - **Randverfijning hielp niet.** BiRefNet lite + ViTMatte gaf een rand-MAE van 0,084–0,090 (afhankelijk van de bandbreedte) tegenover 0,077 zonder. Een guided filter gaf 0,094. Bij foto's van veel meer dan 1280 px kan verfijning op volle resolutie wel helpen, maar dat is niet gemeten.
+- **Hoge resolutie** (12 foto's van ~3000 px, `data/test_hr`): BiRefNet general bleef het beste, met een rand-MAE van 0,122 in 37 s. Het model nogmaals draaien op randtegels van 1024 px op volle resolutie hielp BiRefNet lite iets bij haar (0,132 → 0,119), maar maakte objecten slechter en BiRefNet general in totaal slechter (0,137), terwijl het 10× zo lang duurde. ViTMatte (0,140) en een guided filter (0,150) hielpen ook hier niet.
 - **Combineren hielp niet:** het gemiddelde van InSPyReNet met een zwakker model was niet beter dan InSPyReNet alleen.
 - **BiRefNet-portrait** is sterk op haar (0,075), maar zwak op objecten. **BiRefNet HR-matting** (2048 px) paste niet in 4,5 GB.
 - **Beperkingen:** 18 beelden is een kleine set en elke variant is één keer gemeten. Het verschil tussen de top-3 is klein; met meer beelden kan de volgorde veranderen.
@@ -79,7 +80,7 @@ Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met Web
 - Zonder WebGPU wordt het RMBG-1.4 (niet-commercieel). De BiRefNet-modellen passen in ONNX niet binnen de 4 GB die WebAssembly maximaal mag gebruiken.
 - Foto's groter dan 12 megapixel worden eerst verkleind.
 
-De rekenstappen zijn getest tegen de Python-versie (`node --test tests/web/`).
+De rekenstappen zijn getest tegen de Python-versie (`node --test tests/web/`). Een rooktest in headless Firefox (`tests/web/run_browser_smoke.sh`) verwerkt een echte foto: zonder WebGPU klaar in 27 s, zonder consolefouten.
 
 ## Benchmark zelf draaien
 
