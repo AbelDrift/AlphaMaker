@@ -70,12 +70,13 @@ def main(argv=None):
         HTTPServer((a.host, a.port), Handler).serve_forever()
     bg = a.achtergrond or ('white' if a.formaat == 'jpg' and not a.achtergrondfoto and not a.alleen_masker else None)
     bg_image = Image.open(a.achtergrondfoto) if a.achtergrondfoto else None
-    for f in map(Path, a.files):
+    files = list(map(Path, a.files))
+    for n, f in enumerate(files, 1):
         dst = (a.out or f.parent) / f'{f.stem}-alpha.{a.formaat}'
         dst.parent.mkdir(parents=True, exist_ok=True)
         cut = core.cutout(Image.open(f), a.model, refine_edges=a.fijne_randen)
         core.finish(cut, a.bijsnijden, a.marge, a.alleen_masker, bg, bg_image, a.schaduw).save(dst, quality=95)
-        print(dst, flush=True)
+        print(f'[{n}/{len(files)}] {dst}' if len(files) > 1 else dst, flush=True)
 
 
 if __name__ == '__main__':

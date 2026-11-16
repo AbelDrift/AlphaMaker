@@ -6,6 +6,14 @@ Achtergrond verwijderen met de beste open modellen, **op je eigen apparaat**: al
 
 *English summary below.*
 
+## Snel aan de slag (zonder installeren)
+
+1. Open <https://abeldrift.github.io/AlphaMaker/>. Chrome of Edge is het snelst (WebGPU); Firefox werkt ook, maar trager.
+2. Sleep een of meer foto's in het vak, of plak er een met Ctrl+V. De eerste keer wordt een model gedownload (± 85–170 MB), daarna gaat het sneller.
+3. Kies eventueel een achtergrond, bijsnijden of schaduw, werk randen bij met de gum of het herstelpenseel, en klik op **Download**.
+
+Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
+
 ## Wat het doet
 
 1. **Segmentatie** met het best gemeten open model: standaard InSPyReNet (`transparent-background`, MIT), voor portretten met veel haar BiRefNet general. Het masker wordt op de originele maat opgeleverd.
