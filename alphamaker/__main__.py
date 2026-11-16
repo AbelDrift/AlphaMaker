@@ -47,7 +47,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog='alphamaker')
     ap.add_argument('files', nargs='+', help="afbeeldingen, of 'serve' voor de webpagina")
     ap.add_argument('-o', '--out', type=Path, help='uitvoermap (standaard naast het origineel)')
-    ap.add_argument('--model', default=core.DEFAULT_MODEL, choices=[m for m in core.MODELS if not m.startswith('vitmatte')])
+    ap.add_argument('--model', default=core.DEFAULT_MODEL, choices=core.SEGMENTERS)
     ap.add_argument('--snel', action='store_true', help='zonder randverfijning (sneller, minder fijn haar)')
     ap.add_argument('--port', type=int, default=8092)
     ap.add_argument('--host', default='127.0.0.1')

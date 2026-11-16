@@ -54,6 +54,9 @@ def predict_onnx(sess, cfg, img):
 
 
 def load(name):
+    if name.startswith('pt-'):  # BiRefNet-familie via PyTorch (zie pt_models.py)
+        from pt_models import load_pt
+        return load_pt(name)
     if name == 'inspyrenet':  # transparent-background
         from transparent_background import Remover
         r = Remover(mode='base', device='cpu')

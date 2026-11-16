@@ -3,23 +3,19 @@ import hashlib, os, urllib.request
 from pathlib import Path
 import numpy as np
 from PIL import Image
-from . import refine
+from . import pt, refine
 
 REMBG = 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/'
 HF = 'https://huggingface.co/'
 IMNET = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 HALF = ((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
 NONE = ((0, 0, 0), (1, 1, 1))
-# naam: (url, invoergrootte, normalisatie, nabewerking, sha256 of None)
+# ONNX-modellen; naam: (url, invoergrootte, normalisatie, nabewerking, sha256 of None).
+# De BiRefNet-familie en RMBG-2.0 draaien via PyTorch (pt.py): ONNX Runtime heeft daarvoor >4,5 GB nodig.
 MODELS = {
     'u2net':            (REMBG + 'u2net.onnx', 320, IMNET, 'minmax', None),
     'isnet-general':    (REMBG + 'isnet-general-use.onnx', 1024, HALF, 'minmax', None),
     'rmbg-1.4':         (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model.onnx', 1024, HALF, 'minmax', None),
-    'birefnet-lite':    (REMBG + 'BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx', 1024, IMNET, 'sigmoid', None),
-    'birefnet-general': (REMBG + 'BiRefNet-general-epoch_244.onnx', 1024, IMNET, 'sigmoid', None),
-    'birefnet-portrait':(REMBG + 'BiRefNet-portrait-epoch_150.onnx', 1024, IMNET, 'sigmoid', None),
-    'birefnet-hr-matting': (REMBG + 'BiRefNet_HR-matting-epoch_135.onnx', 2048, IMNET, 'sigmoid', None),
-    'rmbg-2.0':         (HF + 'mohantesting/remove_background/resolve/main/onnx/model.onnx', 1024, IMNET, 'auto', None),
     'ben2':             (HF + 'PramaLLC/BEN2/resolve/main/BEN2_Base.onnx', 1024, NONE, 'minmax', None),
     # ViTMatte (verfijning): dynamische invoermaat, ook vanuit de browser te laden
     'vitmatte':         (HF + 'Xenova/vitmatte-small-composition-1k/resolve/main/onnx/model.onnx', None, None, None, None),
@@ -27,6 +23,7 @@ MODELS = {
 }
 CACHE = Path(os.environ.get('ALPHAMAKER_MODELS', Path.home() / '.cache/alphamaker'))
 _sessions = {}
+_pt = {}
 
 
 def model_path(name):
@@ -61,6 +58,9 @@ def session(name, threads=4):
 
 def segment(img, name):
     """img: PIL RGB → alpha float32 0..1 op volle resolutie (bilineair opgeschaald)."""
+    if name in pt.PT:
+        if name not in _pt: _pt[name] = pt.load(name, CACHE)
+        return _pt[name](img)
     _, size, (mean, std), post, _ = MODELS[name]
     sess = session(name)
     shp = sess.get_inputs()[0].shape
@@ -75,7 +75,9 @@ def segment(img, name):
     return np.asarray(Image.fromarray(y).resize(img.size, Image.BILINEAR), np.float32).clip(0, 1)
 
 
-DEFAULT_MODEL = 'birefnet-general'  # wordt bijgesteld na de benchmark (zie NOTES.md)
+# beste kwaliteit/geheugen-verhouding in de benchmark (zie README); zonder PyTorch een licht ONNX-model
+DEFAULT_MODEL = 'birefnet-lite' if pt.available() else 'isnet-general'
+SEGMENTERS = [m for m in MODELS if not m.startswith('vitmatte')] + list(pt.PT)
 MAX_PIXELS = 50_000_000              # zelfde plafond als remove.bg
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 

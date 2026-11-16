@@ -4,3 +4,4 @@ models/
 preds/
 .removebg-key
 results/run.log
+__pycache__/

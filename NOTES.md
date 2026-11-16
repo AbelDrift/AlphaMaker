@@ -72,3 +72,32 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   ik push via SSH (key werkt voor beide, user AbelDrift). Geen push vóór code klaar is.
 - Webversie in `docs/` (GitHub Pages: main /docs) + `pages`-branch voor Codeberg Pages.
   Browser kan alleen modellen van Hugging Face laden (CORS), niet van GitHub-releases.
+- 2026-11-16 00:25: ook rmbg-2.0 en birefnet-general (ONNX) gekild op 4,5 GB → BiRefNet-familie
+  via **PyTorch** (`bench/pt_models.py`, namen `pt-*`). Code van ZhengPeng7 (officieel) en
+  mohantesting nagelezen: alleen versie-/opmerkingverschillen, geen netwerk/systeemaanroepen;
+  vaste revisies; gewichten als safetensors. Tweede taak `alphamaker-bench2` start vanzelf
+  na `alphamaker-bench` (status: `systemctl --user status alphamaker-bench2`).
+
+## Webversie (GitHub/Codeberg Pages) — 2026-11-16 00:30
+- Gebouwd door workflow `alphamaker-webversie` (bouwer → 4 reviewers → verificatie → fixer),
+  run-id `wf_6241ea65-43a`. Hervatten na crash: Workflow met
+  scriptPath `~/.claude/projects/-home-abel-claude-algemeen/63eeee7a-6517-415a-ba3c-8a163a78d5ff/workflows/scripts/alphamaker-webversie-wf_6241ea65-43a.js`
+  en resumeFromRunId `wf_6241ea65-43a` (klaar-agents komen uit cache).
+- Ontwerp: `docs/` (index.html, app.js, worker.js, refine.js, models.js), onnxruntime-web 1.31.1,
+  WebGPU of WASM, modellen alleen van Hugging Face (Cache API), max 12 MP,
+  pariteitstests `tests/web/` tegen `alphamaker/refine.py` via `bench/make_web_fixtures.py`.
+- Browsermodellen: birefnet-lite (MIT), rmbg-1.4 (NC), ben2 + birefnet (alleen WebGPU),
+  ViTMatte Xenova (q 26 MB / fp32 99 MB). onnx-community/BEN2 gebruikt ImageNet-normalisatie
+  (anders dan PramaLLC-onnx in de Python-bench, die zonder normalisatie werkt).
+
+## Stand 2026-11-16 04:35 (na pauze door gebruikslimiet)
+- Benchmark (rand-MAE ↓): pt-rmbg-2.0 0.0710 (41 s, 4,2 GB, NC) · pt-birefnet-lite 0.0769
+  (28 s, 2,6 GB, MIT) · inspyrenet 0.0792 (15 s, 4,2 GB, MIT) · rmbg-1.4 0.0867 · ben2 0.1086 ·
+  isnet 0.1137 · portrait goed op haar maar slecht op objecten. Ensembles met zwakkere modellen: niet beter.
+- pt-birefnet-general/hr faalden op fp16-gewichten → `model.float()`; herkansing in `alphamaker-bench3`
+  (`bench/queue2.sh`: general, dan verfijning vq16/vm16/vm8/gf4 op lite + vm16 op rmbg-2.0, dan HR).
+  `alphamaker-bench4`: ONNX birefnet-lite opnieuw (meet of hij in browser-WASM (4 GB) past).
+- Webversie-workflow gestopt na de bouwer (reviewers liepen vast op limiet); zelf nagekeken:
+  tests 10/10, ORT-bestanden bestaan, geen innerHTML. Open: standaardmodel per rekenkern.
+- App: BiRefNet-familie + RMBG-2.0 nu via PyTorch (`alphamaker/pt.py`), standaard birefnet-lite
+  (terugval isnet-general zonder torch). ONNX-varianten daarvan uit core verwijderd (te veel geheugen).

@@ -1,0 +1,21 @@
+[project]
+name = "alphamaker"
+version = "0.1.0"
+description = "Achtergrond verwijderen met open modellen, op je eigen apparaat (CLI + lokale webpagina)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["onnxruntime>=1.18", "numpy", "pillow", "scipy"]
+
+[project.scripts]
+alphamaker = "alphamaker.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["alphamaker"]
+
+[tool.setuptools.package-data]
+alphamaker = ["static/*.html"]

@@ -11,7 +11,8 @@ import os
 os.environ.setdefault('ALPHAMAKER_MODELS', str(ROOT / 'models'))
 from alphamaker import core
 from alphamaker.refine import trimap, vitmatte, guided_filter
-from bench.bench import metrics
+sys.path.insert(0, str(ROOT / "bench"))
+from bench import metrics  # bench/bench.py
 
 base, variant = sys.argv[1], sys.argv[2]
 name = f'{base}+{variant}'
