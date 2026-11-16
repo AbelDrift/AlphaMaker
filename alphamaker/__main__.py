@@ -3,7 +3,8 @@
       [--bijsnijden [--marge 0.05]] [--alleen-masker] [--schaduw] [--achtergrond '#fff' | --achtergrondfoto pad]
       [--formaat png|jpg|webp]
   python -m alphamaker serve [--port 8092] [--host 127.0.0.1]"""
-import argparse, io, sys
+import argparse, io, json, sys
+from urllib.parse import parse_qs, urlsplit
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from PIL import Image
@@ -25,10 +26,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path in ('/', '/index.html'): return self._send(200, PAGE, 'text/html; charset=utf-8')
+        if self.path == '/api/models':
+            return self._send(200, json.dumps({'models': core.SEGMENTERS, 'default': self.model}).encode(), 'application/json')
         self._send(404, b'niet gevonden', 'text/plain')
 
     def do_POST(self):
-        if self.path.split('?')[0] != '/api/cutout': return self._send(404, b'niet gevonden', 'text/plain')
+        url = urlsplit(self.path)
+        if url.path != '/api/cutout': return self._send(404, b'niet gevonden', 'text/plain')
+        q = parse_qs(url.query)
+        model = q.get('model', [self.model])[0]
+        if model not in core.SEGMENTERS: return self._send(400, b'onbekend model', 'text/plain')
         n = int(self.headers.get('Content-Length') or 0)
         if not 0 < n <= MAX_UPLOAD: return self._send(413, b'bestand te groot (max 40 MB)', 'text/plain')
         try:
@@ -38,7 +45,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(400, b'geen geldige afbeelding', 'text/plain')
         buf = io.BytesIO()
         try:
-            core.cutout(img, self.model, refine_edges='fijn=1' in self.path).save(buf, 'PNG')
+            core.cutout(img, model, refine_edges='fijn' in q).save(buf, 'PNG')
         except ValueError as e:
             return self._send(413, str(e).encode(), 'text/plain; charset=utf-8')
         self._send(200, buf.getvalue(), 'image/png')

@@ -58,6 +58,8 @@ def session(name, threads=4):
 
 def segment(img, name):
     """img: PIL RGB → alpha float32 0..1 op volle resolutie (bilineair opgeschaald)."""
+    if name in ('inspyrenet', *pt.PT) and name not in _pt:
+        _pt.clear(); __import__('gc').collect()  # één zwaar model tegelijk (elk 2,5–4,3 GB)
     if name in pt.PT:
         if name not in _pt: _pt[name] = pt.load(name, CACHE)
         return _pt[name](img)
