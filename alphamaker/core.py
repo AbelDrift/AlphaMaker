@@ -61,6 +61,13 @@ def segment(img, name):
     if name in pt.PT:
         if name not in _pt: _pt[name] = pt.load(name, CACHE)
         return _pt[name](img)
+    if name == 'inspyrenet':  # transparent-background (MIT): beste allrounder op de schone testset
+        if name not in _pt:
+            import torch
+            from transparent_background import Remover
+            torch.set_num_threads(4)
+            _pt[name] = Remover(mode='base', device='cpu')
+        return np.asarray(_pt[name].process(img, type='map').convert('L'), np.float32) / 255
     _, size, (mean, std), post, _ = MODELS[name]
     sess = session(name)
     shp = sess.get_inputs()[0].shape
@@ -75,9 +82,13 @@ def segment(img, name):
     return np.asarray(Image.fromarray(y).resize(img.size, Image.BILINEAR), np.float32).clip(0, 1)
 
 
-# beste kwaliteit/geheugen-verhouding in de benchmark (zie README); zonder PyTorch een licht ONNX-model
-DEFAULT_MODEL = 'birefnet-general' if pt.available() else 'isnet-general'
-SEGMENTERS = [m for m in MODELS if not m.startswith('vitmatte')] + list(pt.PT)
+# beste allrounder op de schone testset (zie README); zonder PyTorch een licht ONNX-model
+try:
+    import transparent_background  # noqa: F401
+    DEFAULT_MODEL = 'inspyrenet'
+except ImportError:
+    DEFAULT_MODEL = 'birefnet-general' if pt.available() else 'isnet-general'
+SEGMENTERS = ['inspyrenet'] + [m for m in MODELS if not m.startswith('vitmatte')] + list(pt.PT)
 MAX_PIXELS = 50_000_000              # zelfde plafond als remove.bg
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 

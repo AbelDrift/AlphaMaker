@@ -8,32 +8,38 @@ Achtergrond verwijderen met de beste open modellen, **op je eigen apparaat**: al
 
 ## Wat het doet
 
-1. **Segmentatie** met het best gemeten open model (standaard BiRefNet, MIT-licentie) op 1024×1024. Het masker wordt daarna teruggeschaald naar de originele maat.
+1. **Segmentatie** met het best gemeten open model: standaard InSPyReNet (`transparent-background`, MIT), voor portretten met veel haar BiRefNet general. Het masker wordt op de originele maat opgeleverd.
 2. **Randkleurcorrectie** ("blur fusion", Forte & Pitié 2021): de kleur van de oude achtergrond wordt uit haar en randen gehaald, zodat er geen gekleurde halo overblijft op een nieuwe achtergrond. remove.bg doet iets vergelijkbaars ("edge color corrections").
 3. Optioneel, experimenteel: **fijne randen** met ViTMatte, in tegels op volle resolutie. In onze benchmark werd dat niet beter (zie hieronder), daarom staat het standaard uit.
 
 ## Benchmark
 
-18 testbeelden met echte alpha-maskers: 10 lastige objecten uit DIS5K-TE1 en 8 portretten met haar uit PPM-100, verkleind tot hooguit 1280 px. Alles draaide op een oude CPU (Intel 4e generatie, geen GPU), elk model apart en begrensd op 4,5 GB geheugen.
+**Schone testset** (`data/test_clean`): 40 objecten uit DIS5K-VD en 10 portretten met haar uit PPM-100. Voor zover bekend zit geen van deze beelden in de training van de geteste modellen. Alles draaide op een oude CPU (Intel 4e generatie, geen GPU), elk model apart en begrensd op 4,5 GB.
 
-| model | rand-MAE ↓ | MAE ↓ | IoU ↑ | s/beeld (CPU) | piekgeheugen | licentie |
-|---|---|---|---|---|---|---|
-| **BiRefNet general** (PyTorch) | **0,0629** | **0,0033** | **0,980** | 38 | 4,0 GB | MIT |
-| RMBG-2.0 (PyTorch, alleen benchmark) | 0,0710 | 0,0040 | 0,976 | 41 | 4,2 GB | CC BY-NC 4.0 |
-| BiRefNet lite (PyTorch) | 0,0769 | 0,0047 | 0,971 | 28 | 2,6 GB | MIT |
-| InSPyReNet (transparent-background) | 0,0792 | 0,0053 | 0,976 | 15 | 4,2 GB | MIT |
-| RMBG-1.4 (ONNX) | 0,0867 | 0,0252 | 0,934 | 2,3 | 1,1 GB | niet-commercieel |
-| BEN2 (ONNX) | 0,1086 | 0,0084 | 0,955 | 19 | 3,9 GB | MIT |
-| IS-Net general (ONNX) | 0,1137 | 0,0084 | 0,962 | 1,7 | 1,1 GB | Apache-2.0 |
-| U²-Net (ONNX) | 0,2762 | 0,1058 | 0,684 | 0,6 | 0,8 GB | Apache-2.0 |
+| model | rand-MAE ↓ | objecten | portretten (haar) | MAE ↓ | IoU ↑ | s/beeld | piek | licentie |
+|---|---|---|---|---|---|---|---|---|
+| **InSPyReNet** (transparent-background) | 0,079 | 0,079 | 0,081 | **0,010** | **0,947** | 15 | 3,8 GB | MIT |
+| RMBG-1.4 | **0,075** | **0,067** | 0,110 | 0,016 | 0,923 | 1,7 | 1,1 GB | niet-commercieel |
+| RMBG-2.0 (alleen benchmark) | 0,089 | 0,092 | 0,076 | 0,013 | 0,914 | 42 | 4,3 GB | CC BY-NC 4.0 |
+| BiRefNet general | 0,096 | 0,103 | **0,069** | 0,020 | 0,888 | 41 | 4,3 GB | MIT |
+| IS-Net general | 0,103 | 0,094 | 0,137 | 0,013 | 0,932 | 1,6 | 1,0 GB | Apache-2.0 |
+| BEN2 | 0,123 | 0,125 | 0,116 | 0,025 | 0,856 | 16 | 3,9 GB | MIT |
+| BiRefNet lite | 0,125 | 0,137 | 0,077 | 0,034 | 0,825 | 28 | 2,5 GB | MIT |
 
-- **rand-MAE** is de gemiddelde fout in de randzone (halfdoorzichtige pixels plus een band van 8 px rond de contour). Daar zie je verschil in haar en fijne details. **MAE** is de fout over het hele beeld, **IoU** de overlap van het masker.
-- **Randverfijning hielp niet.** BiRefNet lite + ViTMatte gaf een rand-MAE van 0,084–0,090 (afhankelijk van de bandbreedte) tegenover 0,077 zonder. Een guided filter gaf 0,094. Bij foto's van veel meer dan 1280 px kan verfijning op volle resolutie wel helpen, maar dat is niet gemeten.
-- **Hoge resolutie** (12 foto's van ~3000 px, `data/test_hr`): BiRefNet general bleef het beste, met een rand-MAE van 0,122 in 37 s. Het model nogmaals draaien op randtegels van 1024 px op volle resolutie hielp BiRefNet lite iets bij haar (0,132 → 0,119), maar maakte objecten slechter en BiRefNet general in totaal slechter (0,137), terwijl het 10× zo lang duurde. ViTMatte (0,140) en een guided filter (0,150) hielpen ook hier niet.
-- **Combineren hielp niet:** het gemiddelde van InSPyReNet met een zwakker model was niet beter dan InSPyReNet alleen.
-- **BiRefNet-portrait** is sterk op haar (0,075), maar zwak op objecten. **BiRefNet HR-matting** (2048 px) paste niet in 4,5 GB.
-- **Beperkingen:** 18 beelden is een kleine set en elke variant is één keer gemeten. Het verschil tussen de top-3 is klein; met meer beelden kan de volgorde veranderen.
-- De `mohantesting/remove_background`-repo op Hugging Face is een ongegatede kopie van RMBG-2.0: zelfde bestanden en groottes, zelfde niet-commerciële licentie.
+- **InSPyReNet is de beste allrounder.** Het heeft de laagste totale fout en de beste overlap, is even goed op objecten als op haar, en is 3× sneller dan BiRefNet. Daarom is het de standaard in de app.
+- **RMBG-1.4** maakt de mooiste randen op objecten, maar mist vaker een heel stuk (lagere IoU) en mag niet commercieel gebruikt worden. Het is klein en snel, en daarom de standaard in de webversie, met de licentie erbij vermeld.
+- **BiRefNet general** is het beste voor haar (0,069). Voor portretten: `--model birefnet-general`, vergelijkbaar met de keuze `type=person` bij remove.bg.
+- **Combineren** (maskers middelen) leverde niets op. InSPyReNet + RMBG-1.4 gaf iets betere randen (0,075) maar een hogere totale fout; met BiRefNet erbij werd het slechter.
+- **rand-MAE** is de gemiddelde fout in de randzone (halfdoorzichtige pixels plus een band van 8 px rond de contour); daar zit het verschil in haar en fijne details. **MAE** is de fout over het hele beeld, **IoU** de overlap van het masker.
+- **Beperkingen:** 50 beelden, één meting per model. Het verschil tussen de top-2 is klein.
+
+**Les: eerst controleren waarop een model getraind is.** De eerste meting gebruikte DIS5K-TE1. Daar won BiRefNet general ruim (rand-MAE 0,063 tegen 0,079 voor InSPyReNet). Volgens de model zoo van BiRefNet zijn de general-gewichten echter getraind op onder meer "DIS-TEs", dus op die testbeelden zelf. Op de schone set zakt BiRefNet op objecten van 0,054 naar 0,103.
+
+**Andere experimenten** (eerste testset en hoge resolutie):
+- **Randverfijning hielp niet.** ViTMatte op volle resolutie en een guided filter maakten de randen steeds slechter (BiRefNet lite: 0,077 → 0,084–0,094).
+- **Hoge resolutie** (12 foto's van ~3000 px): het model opnieuw draaien op randtegels van 1024 px hielp BiRefNet lite iets bij haar, maar maakte objecten slechter en duurde 10× zo lang. Het blijft daarom alleen als onderzoeksfunctie (`refine.tile_refine`).
+- **BiRefNet HR-matting** (2048 px) past niet in 4,5 GB. De ONNX-versies van BiRefNet hebben op de CPU meer dan 4,5 GB nodig; via PyTorch is het 2,5–4,3 GB.
+- De `mohantesting/remove_background`-repo op Hugging Face is een ongegatede kopie van RMBG-2.0: dezelfde bestanden, dezelfde niet-commerciële licentie.
 
 ## Hoe remove.bg werkt (voor zover openbaar)
 
@@ -56,7 +62,7 @@ git clone https://github.com/AbelDrift/AlphaMaker && cd AlphaMaker
 python3 -m venv .venv && . .venv/bin/activate
 # PyTorch voor de CPU (veel kleiner dan de standaardversie met CUDA):
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install timm kornia einops "transformers<5" safetensors
+pip install transparent-background timm kornia einops "transformers<5" safetensors
 pip install -e .
 
 alphamaker foto.jpg                          # → foto-alpha.png
@@ -70,14 +76,14 @@ alphamaker foto.jpg --achtergrondfoto strand.jpg --schaduw
 alphamaker foto.jpg --alleen-masker                  # alleen het alfamasker (grijswaarden)
 ```
 
-Zonder PyTorch werkt AlphaMaker ook, maar dan met het lichtere IS-Net (ONNX). Modellen worden bij eerste gebruik gedownload naar `~/.cache/alphamaker` (code en gewichten van vaste revisies). Reken voor BiRefNet general op zo'n 4 GB vrij geheugen; `--model birefnet-lite` heeft genoeg aan 2,6 GB.
+Zonder PyTorch werkt AlphaMaker ook, maar dan met het lichtere IS-Net (ONNX). Modellen worden bij eerste gebruik gedownload: InSPyReNet via `transparent-background`, BiRefNet naar `~/.cache/alphamaker` (code en gewichten van vaste revisies). Reken op zo'n 4 GB vrij geheugen; `--model isnet-general` heeft genoeg aan 1 GB.
 
 ## Webversie
 
 Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met WebGPU (grafische kaart) of WebAssembly (processor). Modellen komen van Hugging Face en worden in de browser bewaard.
 
-- Met WebGPU is BiRefNet de standaard (466 MB, eenmalig downloaden).
-- Zonder WebGPU wordt het RMBG-1.4 (niet-commercieel). De BiRefNet-modellen passen in ONNX niet binnen de 4 GB die WebAssembly maximaal mag gebruiken.
+- InSPyReNet bestaat niet als browsermodel. De standaard is daarom RMBG-1.4: beste randen op de schone testset, klein (84–167 MB) en snel, maar niet-commercieel (staat erbij).
+- Met WebGPU kun je ook BiRefNet kiezen, het beste voor haar (466 MB). Zonder WebGPU past BiRefNet niet in de 4 GB die WebAssembly maximaal mag gebruiken.
 - Foto's groter dan 12 megapixel worden eerst verkleind.
 - Afwerken zoals in de Python-app: achtergrondkleur of -foto, bijsnijden tot het onderwerp (met marge) en schaduw.
 
@@ -101,6 +107,10 @@ De code van AlphaMaker valt onder MIT. De modellen hebben hun eigen licenties, z
 
 ## English summary
 
-AlphaMaker removes image backgrounds locally, as a Python CLI/local web page or fully in-browser (GitHub Pages, WebGPU/WASM). On an 18-image benchmark with real alpha mattes (DIS5K-TE1 + PPM-100), **BiRefNet general (MIT)** had the lowest boundary error (0.063), ahead of RMBG-2.0 (0.071), BiRefNet lite (0.077) and InSPyReNet (0.079). It is the default.
+AlphaMaker removes image backgrounds locally, as a Python CLI/local web page or fully in-browser (GitHub/Codeberg Pages, WebGPU/WASM).
 
-Two things did not help on this set: ViTMatte edge refinement and guided filtering made results worse, and averaging models did not improve on the best single model. Foreground colour decontamination ("blur fusion") is applied to avoid halos. The code is MIT; model licenses vary (RMBG = non-commercial).
+On a clean 50-image benchmark (DIS5K-VD + PPM-100, not in the models' training data), **InSPyReNet (transparent-background, MIT)** was the best all-rounder: lowest MAE (0.010), best IoU (0.947) and a boundary error of 0.079. It is the default. RMBG-1.4 had the best object edges (0.075, non-commercial) and is the browser default. BiRefNet general was best on hair (0.069).
+
+An earlier test on DIS5K-TE1 favoured BiRefNet, but its weights were trained on those test images. Edge refinement (ViTMatte, guided filter, high-res tile re-segmentation) and model averaging did not help. Foreground colour decontamination ("blur fusion") is applied to avoid halos.
+
+The code is MIT; model licenses vary.

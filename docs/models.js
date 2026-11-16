@@ -5,8 +5,9 @@ const file = (repo, name, bytes) => ({ url: `${HF}${repo}/resolve/main/onnx/${na
 const IMAGENET = { mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225] };
 const HALF = { mean: [0.5, 0.5, 0.5], std: [1, 1, 1] };
 
-// beste kwaliteit in de benchmark op WebGPU; op de processor past de BiRefNet-familie niet in het WASM-geheugen (max 4 GB)
-export const DEFAULT_MODEL = { webgpu: 'birefnet', wasm: 'rmbg-1.4' };
+// RMBG-1.4: beste randen op de schone testset, klein en snel (niet-commercieel, staat erbij).
+// BiRefNet is beter voor haar maar 466 MB en past niet in WASM (max 4 GB).
+export const DEFAULT_MODEL = { webgpu: 'rmbg-1.4', wasm: 'rmbg-1.4' };
 export const MAX_PIXELS = 12_000_000;  // grotere foto's eerst verkleinen: geheugen van browser en telefoon
 
 // files per rekenkern: 'wasm' (processor) en 'webgpu' (fp16 op de grafische kaart). Geen bestand = kan daar niet.
@@ -39,7 +40,7 @@ export const MODELS = {
     files: { webgpu: file('onnx-community/BEN2-ONNX', 'model_fp16.onnx', 219121675) },
   },
   'birefnet': {
-    label: 'BiRefNet (beste kwaliteit, zwaar)', license: 'MIT', size: 1024, norm: IMAGENET, post: 'auto',
+    label: 'BiRefNet (beste voor haar, zwaar)', license: 'MIT', size: 1024, norm: IMAGENET, post: 'auto',
     files: { webgpu: file('onnx-community/BiRefNet-ONNX', 'model_fp16.onnx', 489666272) },
   },
 };

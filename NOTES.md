@@ -151,3 +151,11 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - Nieuwe schone set `data/test_clean`: 40× DIS-VD + 11× PPM-100-val (≤1280 px), opnieuw meten.
 - Schone benchmark draait: unit `alphamaker-clean` (TESTSET=test_clean; 40 DIS-VD + 10 PPM), resultaten
   `results/test_clean/`, samenvatting `TESTSET=test_clean .venv/bin/python bench/summarize.py`.
+
+## Schone benchmark — eindstand (2026-11-16 10:00)
+- test_clean (40 DIS-VD + 10 PPM), rand-MAE: rmbg-1.4 0.0751 · **inspyrenet 0.0793 (MAE 0.0096, IoU 0.947,
+  15 s, MIT)** · rmbg-2.0 0.0892 · birefnet-general 0.0962 (haar 0.0694 = beste) · isnet 0.1026 ·
+  ben2 0.1233 · birefnet-lite 0.1253. Ensembles: insp+rmbg1.4 0.0748 (MAE slechter), insp+birefnet 0.0860.
+- BESLUIT: app-standaard **inspyrenet** (transparent-background); birefnet-general aanbevolen voor portretten.
+  Web-standaard **rmbg-1.4** (beide backends; NC vermeld), BiRefNet optioneel ("beste voor haar").
+- E2E: CLI met inspyrenet + --bijsnijden op DIS-fietsframe: 25 s, 3,7 GB, RGBA bijgesneden. README herschreven.
