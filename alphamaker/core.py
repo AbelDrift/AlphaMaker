@@ -96,3 +96,35 @@ def cutout(img, model=DEFAULT_MODEL, refine_edges=False, fix_colors=True):
     out = refine.foreground(rgb, alpha) if fix_colors else rgb
     rgba = np.dstack([out, alpha])
     return Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA')
+
+
+def finish(cut, crop=False, margin=0.0, alpha_only=False, bg=None, bg_image=None, shadow=False):
+    """Afwerking zoals de opties van remove.bg: bijsnijden tot het onderwerp (+marge, fractie van de
+    onderwerpgrootte), alleen het masker, schaduw, achtergrondkleur of -foto. cut: RGBA (uit cutout)."""
+    from PIL import ImageColor, ImageFilter, ImageOps
+    if crop:
+        box = cut.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+        if box:
+            mx, my = round((box[2] - box[0]) * margin), round((box[3] - box[1]) * margin)
+            box = (max(0, box[0] - mx), max(0, box[1] - my), min(cut.width, box[2] + mx), min(cut.height, box[3] + my))
+            cut = cut.crop(box)
+    if alpha_only:
+        return cut.getchannel('A')
+    if shadow:  # zachte slagschaduw: vervaagd masker, iets verschoven, 50% dekking
+        a = cut.getchannel('A')
+        r = max(2, round(max(cut.size) * 0.01))
+        sh = Image.new('RGBA', cut.size, (0, 0, 0, 0))
+        sh.putalpha(a.filter(ImageFilter.GaussianBlur(r)).point(lambda v: v // 2))
+        base = Image.new('RGBA', cut.size, (0, 0, 0, 0))
+        base.alpha_composite(sh, (r, r))
+        base.alpha_composite(cut)
+        cut = base
+    if bg_image is not None:
+        back = ImageOps.fit(bg_image.convert('RGBA'), cut.size, Image.LANCZOS)
+        back.alpha_composite(cut)
+        return back.convert('RGB')
+    if bg is not None:
+        back = Image.new('RGBA', cut.size, ImageColor.getrgb(bg) + (255,))
+        back.alpha_composite(cut)
+        return back.convert('RGB')
+    return cut

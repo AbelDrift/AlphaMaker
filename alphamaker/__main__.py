@@ -1,5 +1,7 @@
 """Gebruik:
   python -m alphamaker foto.jpg [meer.jpg ...] [-o map] [--model NAAM] [--fijne-randen]
+      [--bijsnijden [--marge 0.05]] [--alleen-masker] [--schaduw] [--achtergrond '#fff' | --achtergrondfoto pad]
+      [--formaat png|jpg|webp]
   python -m alphamaker serve [--port 8092] [--host 127.0.0.1]"""
 import argparse, io, sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -48,6 +50,13 @@ def main(argv=None):
     ap.add_argument('-o', '--out', type=Path, help='uitvoermap (standaard naast het origineel)')
     ap.add_argument('--model', default=core.DEFAULT_MODEL, choices=core.SEGMENTERS)
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
+    ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
+    ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')
+    ap.add_argument('--alleen-masker', action='store_true', help='alleen het alfamasker (grijswaarden) opslaan')
+    ap.add_argument('--schaduw', action='store_true', help='zachte slagschaduw toevoegen')
+    ap.add_argument('--achtergrond', help="achtergrondkleur, bv. '#ffffff' of 'white'")
+    ap.add_argument('--achtergrondfoto', type=Path, help='foto als nieuwe achtergrond')
+    ap.add_argument('--formaat', choices=['png', 'jpg', 'webp'], default='png', help='uitvoerformaat (jpg zonder achtergrond krijgt wit)')
     ap.add_argument('--port', type=int, default=8092)
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args(argv)
@@ -56,10 +65,13 @@ def main(argv=None):
         print(f'AlphaMaker op http://{a.host}:{a.port}  (Ctrl+C stopt)', flush=True)
         # één verzoek tegelijk: houdt het geheugengebruik voorspelbaar
         HTTPServer((a.host, a.port), Handler).serve_forever()
+    bg = a.achtergrond or ('white' if a.formaat == 'jpg' and not a.achtergrondfoto and not a.alleen_masker else None)
+    bg_image = Image.open(a.achtergrondfoto) if a.achtergrondfoto else None
     for f in map(Path, a.files):
-        dst = (a.out or f.parent) / (f.stem + '-alpha.png')
+        dst = (a.out or f.parent) / f'{f.stem}-alpha.{a.formaat}'
         dst.parent.mkdir(parents=True, exist_ok=True)
-        core.cutout(Image.open(f), a.model, refine_edges=a.fijne_randen).save(dst)
+        cut = core.cutout(Image.open(f), a.model, refine_edges=a.fijne_randen)
+        core.finish(cut, a.bijsnijden, a.marge, a.alleen_masker, bg, bg_image, a.schaduw).save(dst, quality=95)
         print(dst, flush=True)
 
 
