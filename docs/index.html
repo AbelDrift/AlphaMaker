@@ -72,6 +72,8 @@
       <label class="opt"><input id="crop" type="checkbox"> Bijsnijden tot onderwerp</label>
       <label class="opt">Marge <input id="margin" type="number" min="0" max="50" step="1" value="5" style="width:4em"> %</label>
       <label class="opt"><input id="shadow" type="checkbox"> Schaduw</label>
+      <label>Penseel <select id="brush"><option value="">Uit</option><option value="erase">Gum (wissen)</option><option value="restore">Herstellen</option></select></label>
+      <label class="opt">Grootte <input id="brushsize" type="range" min="4" max="200" value="40" aria-label="Penseelgrootte"></label>
       <label>Bestand <select id="format"><option value="png">PNG (transparant)</option><option value="jpg">JPG</option><option value="mask">Alleen masker (PNG)</option></select></label>
       <button id="download" class="primary">Download</button>
       <button id="downloadAll" type="button" hidden>Alles downloaden</button>

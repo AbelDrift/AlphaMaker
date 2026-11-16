@@ -68,8 +68,23 @@ const finish = await evaluate(`(() => {
 console.log('afwerking (bijsnijden+schaduw+kleur):', finish);
 const fmt = await evaluate(`(() => { const f = document.getElementById('format'); return [...f.options].map(o => o.value).join(',') + ' / knop: ' + document.getElementById('download').textContent; })()`);
 console.log('formaten:', fmt);
+const brush = await evaluate(`(async () => {
+  const $ = id => document.getElementById(id), c = $('out');
+  for (const [id, prop, v, ev] of [['crop', 'checked', false, 'input'], ['shadow', 'checked', false, 'input'], ['bgmode', 'value', 'none', 'change'], ['brush', 'value', 'erase', 'change']]) { $(id)[prop] = v; $(id).dispatchEvent(new Event(ev)); }
+  await new Promise(r => requestAnimationFrame(r));
+  const b = c.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
+  const alpha = () => c.getContext('2d').getImageData(Math.floor(c.width / 2), Math.floor(c.height / 2), 1, 1).data[3];
+  const fire = t => c.dispatchEvent(new PointerEvent(t, { clientX: x, clientY: y, pointerId: 1, bubbles: true }));
+  const before = alpha();
+  fire('pointerdown'); fire('pointerup'); await new Promise(r => setTimeout(r, 300));
+  const erased = alpha();
+  $('brush').value = 'restore'; $('brush').dispatchEvent(new Event('change'));
+  fire('pointerdown'); fire('pointerup'); await new Promise(r => setTimeout(r, 1000));
+  return before + '>' + erased + '>' + alpha();
+})()`);
+console.log('penseel (alpha midden: voor>gum>herstel):', brush);
 const finishOk = /niet-dekkend 0$/.test(finish ?? '') && finish.split(',')[0] !== stats.split(',')[0];
 console.log('console:', logs.length ? '\n  ' + logs.join('\n  ') : 'geen meldingen');
 await send('session.end').catch(() => {});
 ws.close();
-process.exit(/^Klaar/.test(s) && /transparant [1-9]/.test(stats) && finishOk && listed === 2 ? 0 : 1);
+process.exit(/^Klaar/.test(s) && /transparant [1-9]/.test(stats) && finishOk && listed === 2 && /^\d+>0>255$/.test(brush ?? '') ? 0 : 1);

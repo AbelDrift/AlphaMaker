@@ -169,6 +169,6 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - KLAAR: onderzoek (openbaar; remove.bg-ToS verbiedt RE/benchmark), schone benchmark (inspyrenet standaard,
   birefnet-general voor haar, web rmbg-1.4), app (CLI/serve) + webversie met afwerking/formaten/bulk,
   alles getest (CLI, serve, lokale en live webversie in headless Firefox), README eerlijk.
-- BEZIG: gum/herstelpenseel in webversie (remove.bg-editor).
+- KLAAR 11:15: gum/herstelpenseel in webversie (rooktest: alpha 15>0>255).
 - IDEEËN: WebGPU-pad testen op een pc met GPU; InSPyReNet naar ONNX voor de webversie (MIT-alternatief
   voor rmbg-1.4); grotere schone testset (meer DIS-VD/P3M); automatische persoonsdetectie voor --type.

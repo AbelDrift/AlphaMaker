@@ -6,6 +6,7 @@ const status = t => { $('status').textContent = t; };
 const mb = bytes => Math.round(bytes / 2 ** 20);
 const worker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
 let backend, cutout, busy, name = 'alphamaker', note = '';
+let source = null, origP = null, pending = null;  // originele foto van het huidige resultaat (voor 'Herstellen')
 
 function setBusy(b) {
   busy = b;
@@ -58,7 +59,7 @@ const next = () => { const f = queue.shift(); if (f) handle(f); };
 
 function showList() {
   $('list').replaceChildren(...results.map((r, i) => Object.assign(document.createElement('button'),
-    { type: 'button', textContent: r.name, onclick: () => { ({ name, cutout, box } = results[i]); render(); } })));
+    { type: 'button', textContent: r.name, onclick: () => { ({ name, cutout, box, file: source } = results[i]); origP = null; render(); } })));
   $('list').hidden = $('downloadAll').hidden = results.length < 2;
 }
 
@@ -73,7 +74,8 @@ worker.onmessage = ({ data: m }) => {
   render();
   $('result').hidden = false;
   $('download').disabled = false;
-  results.push({ name, cutout, box });
+  source = pending; origP = null;
+  results.push({ name, cutout, box, file: source });
   if (results.length > 20) results.shift();
   showList();
   status(`Klaar in ${(m.ms / 1000).toLocaleString('nl', { maximumFractionDigits: 1 })} s. ${note}` + (queue.length ? ` Nog ${queue.length} in de wachtrij…` : ''));
@@ -106,6 +108,7 @@ async function handle(file) {
     bmp.close();
     const { data } = ctx.getImageData(0, 0, w, h);
     ctx.canvas.width = ctx.canvas.height = 0;  // canvasgeheugen direct vrijgeven
+    pending = file;
     worker.postMessage({ rgba: data.buffer, w, h, model: $('model').value, refine: $('fijn').checked,
       matte: $('groot').checked ? 'fp32' : 'q' }, [data.buffer]);
   } catch (e) {
@@ -210,3 +213,42 @@ $('downloadAll').onclick = async () => {
     await new Promise(res => setTimeout(res, 400));  // browsers knijpen snelle reeksen downloads af
   }
 };
+
+// penseel zoals de editor van remove.bg: gum (alpha 0) of herstellen (originele pixels terug)
+let painting = false, queued = false;
+const redraw = () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; render(); }); } };
+async function originalPixels() {  // originele foto op de maat van het resultaat (ook als die verkleind was)
+  const bmp = await createImageBitmap(source);
+  const c = Object.assign(document.createElement('canvas'), { width: cutout.width, height: cutout.height });
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(bmp, 0, 0, c.width, c.height); bmp.close();
+  const px = x.getImageData(0, 0, c.width, c.height).data;
+  c.width = c.height = 0;
+  return px;
+}
+async function paint(e) {
+  const mode = $('brush').value;
+  if (!mode || !cutout || !rect) return;
+  const c = $('out'), b = c.getBoundingClientRect(), k = c.width / b.width;
+  const cx = rect.x + (e.clientX - b.left) * k, cy = rect.y + (e.clientY - b.top) * k;
+  const rad = Number($('brushsize').value) * k / 2;  // grootte in schermpixels
+  const o = mode === 'restore' && source ? await (origP ??= originalPixels()) : null;
+  const d = cutout.data, W = cutout.width;
+  for (let y = Math.max(0, Math.floor(cy - rad)); y <= Math.min(cutout.height - 1, cy + rad); y++)
+    for (let x = Math.max(0, Math.floor(cx - rad)); x <= Math.min(W - 1, cx + rad); x++) {
+      if ((x - cx) ** 2 + (y - cy) ** 2 > rad * rad) continue;
+      const i = 4 * (y * W + x);
+      if (o) { d[i] = o[i]; d[i + 1] = o[i + 1]; d[i + 2] = o[i + 2]; d[i + 3] = 255; } else d[i + 3] = 0;
+    }
+  redraw();
+}
+const out = $('out');
+out.onpointerdown = e => {
+  if (!$('brush').value) return;
+  painting = true;
+  try { out.setPointerCapture(e.pointerId); } catch {}
+  paint(e);
+};
+out.onpointermove = e => { if (painting) paint(e); };
+out.onpointerup = out.onpointercancel = () => { if (painting) { painting = false; box = subjectBox(cutout); } };
+$('brush').onchange = () => { out.style.touchAction = $('brush').value ? 'none' : ''; out.style.cursor = $('brush').value ? 'crosshair' : ''; };
