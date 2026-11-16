@@ -173,3 +173,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - IDEEËN: WebGPU-pad testen op een pc met GPU; InSPyReNet naar ONNX voor de webversie (MIT-alternatief
   voor rmbg-1.4); grotere schone testset (meer DIS-VD/P3M); automatische persoonsdetectie voor --type.
 - 2026-11-16 11:20: grotere schone set test_clean2 (60 DIS-VD andere rijen + 40 PPM-train), unit alphamaker-clean2 (isnet, rmbg-1.4, inspyrenet, birefnet-general).
+- 2026-11-16 ~13:00: test_clean2 klaar. Gepoold 150 beelden rand-MAE: inspyrenet 0.0776 (MAE 0.0090, IoU 0.954) · rmbg-1.4 0.0789 (obj 0.0660) · birefnet-general 0.0903 (haar 0.0670) · isnet 0.1084 → keuzes bevestigd.

@@ -26,6 +26,8 @@ Achtergrond verwijderen met de beste open modellen, **op je eigen apparaat**: al
 | BEN2 | 0,123 | 0,125 | 0,116 | 0,025 | 0,856 | 16 | 3,9 GB | MIT |
 | BiRefNet lite | 0,125 | 0,137 | 0,077 | 0,034 | 0,825 | 28 | 2,5 GB | MIT |
 
+**Bevestigd op een tweede schone set** (60 andere DIS-VD-beelden en 40 PPM-train-portretten, samen 150 beelden). De rand-MAE over alle 150 beelden: InSPyReNet 0,078 (objecten 0,079 / haar 0,075, MAE 0,009, IoU 0,954), RMBG-1.4 0,079 (0,066 / 0,105), BiRefNet general 0,090 (0,102 / **0,067**), IS-Net 0,108.
+
 - **InSPyReNet is de beste allrounder.** Het heeft de laagste totale fout en de beste overlap, is even goed op objecten als op haar, en is 3× sneller dan BiRefNet. Daarom is het de standaard in de app.
 - **RMBG-1.4** maakt de mooiste randen op objecten, maar mist vaker een heel stuk (lagere IoU) en mag niet commercieel gebruikt worden. Het is klein en snel, en daarom de standaard in de webversie, met de licentie erbij vermeld.
 - **BiRefNet general** is het beste voor haar (0,069). Voor portretten: `--model birefnet-general`, vergelijkbaar met de keuze `type=person` bij remove.bg.
