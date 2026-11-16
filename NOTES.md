@@ -164,3 +164,11 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   afwerking (code overgenomen uit docs/app.js — houd gelijk); getest in headless Firefox tegen serve (isnet):
   2,4 s, afwerking ok, 0 consolemeldingen. Rooktest werkt ook tegen serve (foto als data-URL ≤128 KB).
 - 2026-11-16 ~11:00: webversie bulk (wachtrij, lijst, 'Alles downloaden', max 20 in geheugen); rooktest biedt 2 foto's aan (2 in lijst ok). Live GitHub+Codeberg doorstaan de rooktest (26 s, 0 fouten).
+
+## Stand en volgende stappen (2026-11-16 11:00)
+- KLAAR: onderzoek (openbaar; remove.bg-ToS verbiedt RE/benchmark), schone benchmark (inspyrenet standaard,
+  birefnet-general voor haar, web rmbg-1.4), app (CLI/serve) + webversie met afwerking/formaten/bulk,
+  alles getest (CLI, serve, lokale en live webversie in headless Firefox), README eerlijk.
+- BEZIG: gum/herstelpenseel in webversie (remove.bg-editor).
+- IDEEËN: WebGPU-pad testen op een pc met GPU; InSPyReNet naar ONNX voor de webversie (MIT-alternatief
+  voor rmbg-1.4); grotere schone testset (meer DIS-VD/P3M); automatische persoonsdetectie voor --type.
