@@ -182,3 +182,9 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - 2026-11-16 ~14:00: serve-pagina met modelkeuze (/api/models, ?model= gevalideerd → 400 bij onbekend); core geeft vorig zwaar model vrij bij wissel. README snelstart; CLI-voortgang [n/N].
 - 2026-11-16 ~14:15: zelfreview app.js: 2 fouten hersteld (Alles downloaden zette originele foto niet om → herstelpenseel gebruikte verkeerde foto; kader niet herberekend na penseel). Rooktest groen.
 - 2026-11-16 ~14:30: serve-pagina heeft nu ook gum/herstelpenseel (zelfde code als docs/app.js); getest in Firefox: alpha 145>0>255, 0 consolemeldingen. CI groen (e03b924).
+
+## Nieuwe modellen zoeken (2026-11-16, na reset weektegoed)
+- Workflow `alphamaker-nieuwe-modellen` (run `wf_ceeab066-8ef`): 4 zoekers (HF, papers, GitHub/ComfyUI,
+  bedrijven) → adversariële verificatie per kandidaat → testplan. Hervatten: Workflow met scriptPath
+  `~/.claude/projects/-home-abel-claude-algemeen/63eeee7a-6517-415a-ba3c-8a163a78d5ff/workflows/scripts/alphamaker-nieuwe-modellen-wf_ceeab066-8ef.js`
+  + resumeFromRunId. Daarna: kandidaten één voor één benchmarken op test_clean + test_clean2 (150 beelden).
