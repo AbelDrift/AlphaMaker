@@ -172,3 +172,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - KLAAR 11:15: gum/herstelpenseel in webversie (rooktest: alpha 15>0>255).
 - IDEEËN: WebGPU-pad testen op een pc met GPU; InSPyReNet naar ONNX voor de webversie (MIT-alternatief
   voor rmbg-1.4); grotere schone testset (meer DIS-VD/P3M); automatische persoonsdetectie voor --type.
+- 2026-11-16 11:20: grotere schone set test_clean2 (60 DIS-VD andere rijen + 40 PPM-train), unit alphamaker-clean2 (isnet, rmbg-1.4, inspyrenet, birefnet-general).
