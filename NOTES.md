@@ -175,3 +175,7 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - 2026-11-16 11:20: grotere schone set test_clean2 (60 DIS-VD andere rijen + 40 PPM-train), unit alphamaker-clean2 (isnet, rmbg-1.4, inspyrenet, birefnet-general).
 - 2026-11-16 ~13:00: test_clean2 klaar. Gepoold 150 beelden rand-MAE: inspyrenet 0.0776 (MAE 0.0090, IoU 0.954) · rmbg-1.4 0.0789 (obj 0.0660) · birefnet-general 0.0903 (haar 0.0670) · isnet 0.1084 → keuzes bevestigd.
 - 2026-11-16 ~13:30: GitHub Actions CI groen (syntax, pariteit web↔Python, Python-tests; Node 22 vraagt expliciet testbestand). Tegoed ~96%: werk staat volledig gepusht; volgende sessie: zie 'Stand en volgende stappen'.
+- 2026-11-16 ~13:45: InSPyReNet→ONNX-export (`bench/export_inspyrenet.py`, invoer 1024², ImageNet-norm., uitvoer 0..1)
+  gekild op 4,5 GB na 22 s. Niet hoger gezet: swap 100% vol, 5,3 GB vrij → crashrisico. Conclusie: ook in de
+  browser waarschijnlijk alleen via WebGPU haalbaar (WASM max 4 GB). Export op pc met ≥16 GB RAM; daarna
+  ORT-geheugen meten, fp16 maken, op HF zetten (Abels account) en in docs/models.js opnemen.
