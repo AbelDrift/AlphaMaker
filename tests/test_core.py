@@ -44,6 +44,30 @@ def test_cli_type_persoon_kiest_haarmodel():
         for f in out.parent.glob('_tmp*.png'): f.unlink()
 
 
+def test_serve_api():
+    """Server: modellenlijst, geldig model → PNG, onbekend model → 400, geen foto → 400 (nep-cutout, geen model)."""
+    import io, json, threading, urllib.error, urllib.request
+    from http.server import HTTPServer
+    import alphamaker.__main__ as cli
+    srv = HTTPServer(('127.0.0.1', 0), cli.Handler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f'http://127.0.0.1:{srv.server_address[1]}'
+    core_cutout, core.cutout = core.cutout, lambda img, model, **kw: cut()
+    try:
+        info = json.load(urllib.request.urlopen(base + '/api/models'))
+        assert info['default'] in info['models']
+        buf = io.BytesIO(); Image.new('RGB', (8, 8)).save(buf, 'PNG')
+        post = lambda q, data: urllib.request.urlopen(urllib.request.Request(base + '/api/cutout' + q, data=data, method='POST'))
+        r = post('?model=' + info['models'][0], buf.getvalue())
+        assert r.headers['Content-Type'] == 'image/png' and Image.open(io.BytesIO(r.read())).mode == 'RGBA'
+        for q, data in (('?model=bestaat-niet', buf.getvalue()), ('', b'geen foto')):
+            try: post(q, data); raise AssertionError('verwacht 400')
+            except urllib.error.HTTPError as e: assert e.code == 400, e.code
+    finally:
+        core.cutout = core_cutout
+        srv.shutdown()
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'): fn(); print('ok', name)

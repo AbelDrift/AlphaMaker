@@ -78,7 +78,7 @@ pip install -e .
 alphamaker foto.jpg                          # → foto-alpha.png
 alphamaker *.jpg -o uitvoer/
 alphamaker portret.jpg --type persoon       # beste model voor haar (BiRefNet general)
-alphamaker serve                             # webpagina op http://127.0.0.1:8092
+alphamaker serve                             # webpagina op http://127.0.0.1:8092 (model kiezen, afwerken)
 
 # afwerken zoals bij remove.bg (alles lokaal):
 alphamaker foto.jpg --bijsnijden --marge 0.05        # bijsnijden tot het onderwerp, 5% marge
