@@ -128,3 +128,6 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - HR-experiment draait: unit `alphamaker-hr` (`bench/queue_hr.sh`, TESTSET=test_hr), resultaten in
   `results/test_hr/`, samenvatting: `TESTSET=test_hr .venv/bin/python bench/summarize.py`.
   Nieuwe functie `refine.tile_refine` (basismodel opnieuw op randtegels op volle resolutie).
+- 2026-11-16 ~07:00: webversie LIVE op https://abeldrift.github.io/AlphaMaker/ (Pages: main /docs) en
+  https://abeldrift.codeberg.page/AlphaMaker/ (git-pages-webhook; deploy = nieuwe push naar `pages`:
+  `git subtree split --prefix docs -b pages && git push -f codeberg pages`). Abel besloot: repo's blijven openbaar.
