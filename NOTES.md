@@ -142,3 +142,12 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - Browser-rooktest (headless Firefox 153 ESR, WebDriver BiDi, WASM 1 kern, rmbg-1.4-licht):
   klaar in 27 s, 1280×853, 63% transparant, 4,7% halfdoorzichtig, 0 consolemeldingen. Script:
   `tests/web/run_browser_smoke.sh [foto] [model]` (max 3 GB). WebGPU-pad niet getest (geen GPU hier).
+
+## Besmetting testset ontdekt (2026-11-16 08:00)
+- BiRefNet-README (model zoo): general-gewichten getraind op DIS5K-TR + **DIS-TEs** + DUTS/HRSOD/UHRSD/HRS10K
+  (TR+TE) + P3M-10k + TE-P3M-500 + TR-humans. → onze dis_-beelden (DIS-TE1) zitten in de training van
+  BiRefNet general/lite: DIS-scores van BiRefNet zijn te rooskleurig. PPM-100 staat er niet in (schoon).
+  Makers testen zelf op DIS-VD.
+- Nieuwe schone set `data/test_clean`: 40× DIS-VD + 11× PPM-100-val (≤1280 px), opnieuw meten.
+- Schone benchmark draait: unit `alphamaker-clean` (TESTSET=test_clean; 40 DIS-VD + 10 PPM), resultaten
+  `results/test_clean/`, samenvatting `TESTSET=test_clean .venv/bin/python bench/summarize.py`.
