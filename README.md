@@ -66,7 +66,8 @@ pip install transparent-background timm kornia einops "transformers<5" safetenso
 pip install -e .
 
 alphamaker foto.jpg                          # → foto-alpha.png
-alphamaker *.jpg -o uitvoer/ --model birefnet-lite
+alphamaker *.jpg -o uitvoer/
+alphamaker portret.jpg --type persoon       # beste model voor haar (BiRefNet general)
 alphamaker serve                             # webpagina op http://127.0.0.1:8092
 
 # afwerken zoals bij remove.bg (alles lokaal):

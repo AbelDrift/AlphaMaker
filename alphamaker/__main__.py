@@ -48,7 +48,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog='alphamaker')
     ap.add_argument('files', nargs='+', help="afbeeldingen, of 'serve' voor de webpagina")
     ap.add_argument('-o', '--out', type=Path, help='uitvoermap (standaard naast het origineel)')
-    ap.add_argument('--model', default=core.DEFAULT_MODEL, choices=core.SEGMENTERS)
+    ap.add_argument('--model', choices=core.SEGMENTERS, help=f'standaard: {core.DEFAULT_MODEL}')
+    ap.add_argument('--type', choices=['auto', 'persoon'], default='auto',
+                    help='zoals remove.bg type=person: persoon → birefnet-general (beste voor haar)')
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
     ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')
@@ -60,6 +62,7 @@ def main(argv=None):
     ap.add_argument('--port', type=int, default=8092)
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args(argv)
+    a.model = a.model or ('birefnet-general' if a.type == 'persoon' and core.pt.available() else core.DEFAULT_MODEL)
     if a.files == ['serve']:
         Handler.model = a.model
         print(f'AlphaMaker op http://{a.host}:{a.port}  (Ctrl+C stopt)', flush=True)
