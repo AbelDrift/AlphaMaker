@@ -33,11 +33,12 @@ function ready(m) {
     const f = spec.files[backend];
     sel.add(Object.assign(new Option(`${spec.label} · ${f ? mb(f.bytes) + ' MB' : 'alleen met WebGPU'}`, key), { disabled: !f }));
   }
-  sel.value = MODELS[DEFAULT_MODEL].files[backend] ? DEFAULT_MODEL : [...sel.options].find(o => !o.disabled).value;
+  const def = DEFAULT_MODEL[backend];
+  sel.value = MODELS[def]?.files[backend] ? def : [...sel.options].find(o => !o.disabled).value;
   $('engine').textContent = backend === 'webgpu'
     ? 'Rekent op je grafische kaart (WebGPU).'
     : `Rekent op de processor (WebAssembly${m.threads ? '' : ', één kern'}); dat is trager. Je browser heeft geen WebGPU met fp16, daarom zijn de modellen "alleen met WebGPU" uitgeschakeld.`;
-  $('fijn').checked = backend === 'webgpu';  // ViTMatte op de processor duurt per tegel lang
+  $('fijn').checked = false;  // ViTMatte maakte de randen in de benchmark niet beter: experimenteel
   showLicense();
   setBusy(false);
   status('');

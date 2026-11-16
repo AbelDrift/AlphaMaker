@@ -1,5 +1,5 @@
 """Gebruik:
-  python -m alphamaker foto.jpg [meer.jpg ...] [-o map] [--model NAAM] [--snel]
+  python -m alphamaker foto.jpg [meer.jpg ...] [-o map] [--model NAAM] [--fijne-randen]
   python -m alphamaker serve [--port 8092] [--host 127.0.0.1]"""
 import argparse, io, sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -34,10 +34,9 @@ class Handler(BaseHTTPRequestHandler):
             img.load()
         except Exception:
             return self._send(400, b'geen geldige afbeelding', 'text/plain')
-        fast = 'snel=1' in self.path
         buf = io.BytesIO()
         try:
-            core.cutout(img, self.model, refine_edges=not fast).save(buf, 'PNG')
+            core.cutout(img, self.model, refine_edges='fijn=1' in self.path).save(buf, 'PNG')
         except ValueError as e:
             return self._send(413, str(e).encode(), 'text/plain; charset=utf-8')
         self._send(200, buf.getvalue(), 'image/png')
@@ -48,7 +47,7 @@ def main(argv=None):
     ap.add_argument('files', nargs='+', help="afbeeldingen, of 'serve' voor de webpagina")
     ap.add_argument('-o', '--out', type=Path, help='uitvoermap (standaard naast het origineel)')
     ap.add_argument('--model', default=core.DEFAULT_MODEL, choices=core.SEGMENTERS)
-    ap.add_argument('--snel', action='store_true', help='zonder randverfijning (sneller, minder fijn haar)')
+    ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--port', type=int, default=8092)
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args(argv)
@@ -60,7 +59,7 @@ def main(argv=None):
     for f in map(Path, a.files):
         dst = (a.out or f.parent) / (f.stem + '-alpha.png')
         dst.parent.mkdir(parents=True, exist_ok=True)
-        core.cutout(Image.open(f), a.model, refine_edges=not a.snel).save(dst)
+        core.cutout(Image.open(f), a.model, refine_edges=a.fijne_randen).save(dst)
         print(dst, flush=True)
 
 

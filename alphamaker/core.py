@@ -76,13 +76,14 @@ def segment(img, name):
 
 
 # beste kwaliteit/geheugen-verhouding in de benchmark (zie README); zonder PyTorch een licht ONNX-model
-DEFAULT_MODEL = 'birefnet-lite' if pt.available() else 'isnet-general'
+DEFAULT_MODEL = 'birefnet-general' if pt.available() else 'isnet-general'
 SEGMENTERS = [m for m in MODELS if not m.startswith('vitmatte')] + list(pt.PT)
 MAX_PIXELS = 50_000_000              # zelfde plafond als remove.bg
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
 
-def cutout(img, model=DEFAULT_MODEL, refine_edges=True, fix_colors=True):
+def cutout(img, model=DEFAULT_MODEL, refine_edges=False, fix_colors=True):
+    # refine_edges (ViTMatte) maakte de randen in de benchmark slechter: experimentele optie
     """PIL-afbeelding → RGBA met transparante achtergrond."""
     if img.width * img.height > MAX_PIXELS:
         raise ValueError(f'afbeelding te groot (max {MAX_PIXELS // 1_000_000} MP)')

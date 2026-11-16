@@ -5,7 +5,8 @@ const file = (repo, name, bytes) => ({ url: `${HF}${repo}/resolve/main/onnx/${na
 const IMAGENET = { mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225] };
 const HALF = { mean: [0.5, 0.5, 0.5], std: [1, 1, 1] };
 
-export const DEFAULT_MODEL = 'birefnet-lite';
+// beste kwaliteit in de benchmark op WebGPU; op de processor past de BiRefNet-familie niet in het WASM-geheugen (max 4 GB)
+export const DEFAULT_MODEL = { webgpu: 'birefnet', wasm: 'rmbg-1.4' };
 export const MAX_PIXELS = 12_000_000;  // grotere foto's eerst verkleinen: geheugen van browser en telefoon
 
 // files per rekenkern: 'wasm' (processor) en 'webgpu' (fp16 op de grafische kaart). Geen bestand = kan daar niet.
@@ -14,7 +15,6 @@ export const MODELS = {
   'birefnet-lite': {
     label: 'BiRefNet lite', license: 'MIT', size: 1024, norm: IMAGENET, post: 'auto',
     files: {
-      wasm: file('onnx-community/BiRefNet_lite-ONNX', 'model.onnx', 224005088),
       webgpu: file('onnx-community/BiRefNet_lite-ONNX', 'model_fp16.onnx', 114538221),
     },
   },
@@ -39,7 +39,7 @@ export const MODELS = {
     files: { webgpu: file('onnx-community/BEN2-ONNX', 'model_fp16.onnx', 219121675) },
   },
   'birefnet': {
-    label: 'BiRefNet (zwaar)', license: 'MIT', size: 1024, norm: IMAGENET, post: 'auto',
+    label: 'BiRefNet (beste kwaliteit, zwaar)', license: 'MIT', size: 1024, norm: IMAGENET, post: 'auto',
     files: { webgpu: file('onnx-community/BiRefNet-ONNX', 'model_fp16.onnx', 489666272) },
   },
 };

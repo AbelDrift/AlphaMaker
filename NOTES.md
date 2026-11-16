@@ -101,3 +101,14 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   tests 10/10, ORT-bestanden bestaan, geen innerHTML. Open: standaardmodel per rekenkern.
 - App: BiRefNet-familie + RMBG-2.0 nu via PyTorch (`alphamaker/pt.py`), standaard birefnet-lite
   (terugval isnet-general zonder torch). ONNX-varianten daarvan uit core verwijderd (te veel geheugen).
+
+## Besluiten 2026-11-16 05:00 (na volledige benchmark)
+- pt-birefnet-general wint (rand-MAE 0.0629, MIT, 38 s, 4,0 GB) → standaard in Python-app.
+- ViTMatte/guided filter maken randen slechter (lite 0.077 → 0.084–0.094) → verfijning standaard
+  UIT, optie `--fijne-randen` / vinkje "experimenteel". Kanttekening: testbeelden ≤1280 px.
+- ONNX birefnet-lite ook met zuinige ORT-opties >4,5 GB → past niet in browser-WASM (4 GB):
+  web-standaard WebGPU = birefnet (fp16), WASM = rmbg-1.4 (NC, duidelijk vermeld).
+- HR-matting (2048) past niet in 4,5 GB. Codeberg Pages vraagt nu een git-pages-webhook (Abel).
+- End-to-end getest: CLI met birefnet-general op portret (51 s, 4,3 GB, visueel schoon haar);
+  `serve` met isnet: GET 200, POST foto → RGBA-PNG, ongeldige invoer → 400.
+- Open: webversie nog niet in echte browser getest; remove.bg-vergelijking vraagt API-sleutel.
