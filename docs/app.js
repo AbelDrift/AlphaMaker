@@ -56,10 +56,12 @@ function enqueue(files) {
   else next();
 }
 const next = () => { const f = queue.shift(); if (f) handle(f); };
+// resultaat actief maken; kader opnieuw bepalen (penseel kan het onderwerp veranderd hebben), originele foto mee voor 'Herstellen'
+function select(r) { ({ name, cutout, file: source } = r); box = subjectBox(cutout); origP = null; render(); }
 
 function showList() {
   $('list').replaceChildren(...results.map((r, i) => Object.assign(document.createElement('button'),
-    { type: 'button', textContent: r.name, onclick: () => { ({ name, cutout, box, file: source } = results[i]); origP = null; render(); } })));
+    { type: 'button', textContent: r.name, onclick: () => select(results[i]) })));
   $('list').hidden = $('downloadAll').hidden = results.length < 2;
 }
 
@@ -207,8 +209,7 @@ drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); enqueue(
 addEventListener('paste', e => { const f = e.clipboardData.files[0]; if (f) enqueue([f]); });
 $('downloadAll').onclick = async () => {
   for (const r of results) {
-    ({ name, cutout, box } = r);
-    render();
+    select(r);
     $('download').click();  // toBlob maakt meteen een kopie van het canvas
     await new Promise(res => setTimeout(res, 400));  // browsers knijpen snelle reeksen downloads af
   }

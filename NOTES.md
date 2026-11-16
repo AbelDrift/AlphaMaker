@@ -180,3 +180,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   browser waarschijnlijk alleen via WebGPU haalbaar (WASM max 4 GB). Export op pc met ≥16 GB RAM; daarna
   ORT-geheugen meten, fp16 maken, op HF zetten (Abels account) en in docs/models.js opnemen.
 - 2026-11-16 ~14:00: serve-pagina met modelkeuze (/api/models, ?model= gevalideerd → 400 bij onbekend); core geeft vorig zwaar model vrij bij wissel. README snelstart; CLI-voortgang [n/N].
+- 2026-11-16 ~14:15: zelfreview app.js: 2 fouten hersteld (Alles downloaden zette originele foto niet om → herstelpenseel gebruikte verkeerde foto; kader niet herberekend na penseel). Rooktest groen.
