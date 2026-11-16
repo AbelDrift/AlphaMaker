@@ -28,7 +28,7 @@ export const MODELS = {
     },
   },
   'rmbg-1.4-licht': {
-    label: 'RMBG-1.4 licht (niet-commercieel)', license: 'bria-rmbg-1.4: alleen voor niet-commercieel gebruik',
+    label: 'RMBG-1.4 licht: kleinere download, iets minder nauwkeurig (niet-commercieel)', license: 'bria-rmbg-1.4: alleen voor niet-commercieel gebruik',
     nonCommercial: true, size: 1024, norm: HALF, post: 'minmax',
     files: {
       wasm: file('briaai/RMBG-1.4', 'model_quantized.onnx', 44403226),

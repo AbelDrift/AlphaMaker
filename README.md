@@ -94,6 +94,7 @@ Zonder PyTorch werkt AlphaMaker ook, maar dan met het lichtere IS-Net (ONNX). Mo
 Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met WebGPU (grafische kaart) of WebAssembly (processor). Modellen komen van Hugging Face en worden in de browser bewaard.
 
 - InSPyReNet bestaat niet als browsermodel. De standaard is daarom RMBG-1.4: beste randen op de schone testset, klein (84–167 MB) en snel, maar niet-commercieel (staat erbij).
+- RMBG-1.4 is er ook in een lichte versie (42 MB). Die is 2,8% minder nauwkeurig (rand-MAE 0,081 tegen 0,079 op 150 beelden) en op oudere processors niet sneller (Firefox: 8,2 s tegen 7,0 s). Handig bij een trage verbinding.
 - Met WebGPU kun je ook BiRefNet kiezen, het beste voor haar (466 MB). Zonder WebGPU past BiRefNet niet in de 4 GB die WebAssembly maximaal mag gebruiken.
 - Foto's groter dan 12 megapixel worden eerst verkleind.
 - Afwerken zoals in de Python-app: achtergrondkleur of -foto, bijsnijden tot het onderwerp (met marge) en schaduw; downloaden als PNG, JPG of alleen het masker.
