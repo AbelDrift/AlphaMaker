@@ -19,7 +19,7 @@ Achtergrond verwijderen met de beste open modellen, **op je eigen apparaat**: al
 | model | rand-MAE ↓ | MAE ↓ | IoU ↑ | s/beeld (CPU) | piekgeheugen | licentie |
 |---|---|---|---|---|---|---|
 | **BiRefNet general** (PyTorch) | **0,0629** | **0,0033** | **0,980** | 38 | 4,0 GB | MIT |
-| RMBG-2.0 (PyTorch) | 0,0710 | 0,0040 | 0,976 | 41 | 4,2 GB | CC BY-NC 4.0 |
+| RMBG-2.0 (PyTorch, alleen benchmark) | 0,0710 | 0,0040 | 0,976 | 41 | 4,2 GB | CC BY-NC 4.0 |
 | BiRefNet lite (PyTorch) | 0,0769 | 0,0047 | 0,971 | 28 | 2,6 GB | MIT |
 | InSPyReNet (transparent-background) | 0,0792 | 0,0053 | 0,976 | 15 | 4,2 GB | MIT |
 | RMBG-1.4 (ONNX) | 0,0867 | 0,0252 | 0,934 | 2,3 | 1,1 GB | niet-commercieel |
@@ -44,7 +44,9 @@ remove.bg is gebouwd door Kaleido (Wenen) en sinds 2021 van Canva. Het model zel
 - uitvoer **tot 25–50 megapixel**: het masker wordt dus op hoge resolutie gemaakt, niet alleen opgeschaald;
 - bijsnijden, regio, schaal, positie, schaduw en achtergrondkleur of -foto.
 
-Een onafhankelijke-achtige test (Runflow, feb 2026, 5000 productfoto's) gaf remove.bg 95 punten en RMBG-2.0 93. In onze test scoort BiRefNet general beter dan RMBG-2.0. Een directe vergelijking met remove.bg zelf staat nog open: daarvoor is een API-sleutel nodig.
+Een onafhankelijke-achtige test (Runflow, feb 2026, 5000 productfoto's) gaf remove.bg 95 punten en RMBG-2.0 93. In onze test scoort BiRefNet general beter dan RMBG-2.0.
+
+AlphaMaker is niet met remove.bg vergeleken, en is ook niet op hun dienst gebaseerd. Hun voorwaarden (art. 5.2) verbieden reverse engineering en het gebruik van de dienst voor benchmarks of voor het bouwen van een concurrerend product. Daarom zijn alleen openbare bronnen gebruikt: documentatie, aankondigingen en voorwaarden.
 
 ## Installeren en gebruiken (Python)
 
@@ -85,7 +87,7 @@ Zie [`NOTES.md`](NOTES.md) voor het volledige logboek: onderzoek, keuzes, misluk
 
 ## Licenties
 
-De code van AlphaMaker valt onder MIT. De modellen hebben hun eigen licenties, zie de tabel. RMBG-1.4 en RMBG-2.0 zijn alleen voor niet-commercieel gebruik.
+De code van AlphaMaker valt onder MIT. De modellen hebben hun eigen licenties, zie de tabel. RMBG-1.4 en RMBG-2.0 zijn alleen voor niet-commercieel gebruik. RMBG-2.0 is alleen in de benchmark gebruikt, niet in de app. RMBG-1.4 is in de webversie de standaard zonder WebGPU; voor commercieel gebruik kies je daar een ander model of een licentie van Bria.
 
 ---
 

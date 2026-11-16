@@ -13,8 +13,8 @@ PT = {
     'birefnet-general': ('ZhengPeng7/BiRefNet', 'e2bf8e4460fc8fa32bba5ea4d94b3233d367b0e4', 1024, 'MIT'),
     'birefnet-portrait':('ZhengPeng7/BiRefNet-portrait', 'b6561965a70070d9143fd9e558f6ca3c481510db', 1024, 'MIT'),
     'birefnet-hr-matting': ('ZhengPeng7/BiRefNet_HR-matting', '5d6b6f8adcb5b417c871b1d84ceaae9871355b7f', 2048, 'MIT'),
-    # = RMBG-2.0 van Bria (zelfde bestanden), ongegated gespiegeld door mohantesting
-    'rmbg-2.0':         ('mohantesting/remove_background', 'ddd449c55570b4effc5bce03a603d085299eec29', 1024, 'CC BY-NC 4.0 (niet-commercieel)'),
+    # RMBG-2.0 bewust niet in de app: alleen via een ongegatede kopie te laden (omzeilt Bria's formulier),
+    # niet-commercieel, en BiRefNet general scoorde beter. In de benchmark (bench/pt_models.py) wel gemeten.
 }
 
 
