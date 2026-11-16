@@ -56,6 +56,8 @@
       <label class="opt"><input id="crop" type="checkbox"> Bijsnijden tot onderwerp</label>
       <label class="opt">Marge <input id="margin" type="number" min="0" max="50" step="1" value="5" style="width:4em"> %</label>
       <label class="opt"><input id="shadow" type="checkbox"> Schaduw</label>
+      <label>Penseel <select id="brush"><option value="">Uit</option><option value="erase">Gum (wissen)</option><option value="restore">Herstellen</option></select></label>
+      <label class="opt">Grootte <input id="brushsize" type="range" min="4" max="200" value="40" aria-label="Penseelgrootte"></label>
       <label>Bestand <select id="format"><option value="png">PNG (transparant)</option><option value="jpg">JPG</option><option value="mask">Alleen masker (PNG)</option></select></label>
       <button id="download" class="primary">Download</button>
     </div>
@@ -85,6 +87,7 @@ async function handle(file) {
     const ctx = c.getContext('2d'); ctx.drawImage(bmp, 0, 0);
     cutout = ctx.getImageData(0, 0, c.width, c.height);
     box = subjectBox(cutout);
+    source = file; origP = null;  // originele foto voor 'Herstellen'
     render();
     $('result').hidden = false;
     $('download').disabled = false;
@@ -95,6 +98,7 @@ async function handle(file) {
 }
 
 // overgenomen uit docs/app.js: houd beide gelijk
+let source = null, origP = null;
 let bgImg = null, box = null, rect = null;  // achtergrondfoto, onderwerp-kader en getoonde uitsnede
 
 function subjectBox({ width: w, height: h, data }) {  // kleinste rechthoek met alpha > 8, zoals core.finish
@@ -181,6 +185,45 @@ fetch('/api/models').then(r => r.json()).then(({ models, default: d }) => {
   $('model').replaceChildren(...models.map(m => new Option(m === 'inspyrenet' ? m + ' (beste allrounder)' : m === 'birefnet-general' ? m + ' (beste voor haar)' : m, m)));
   $('model').value = d;
 }).catch(() => {});
+// overgenomen uit docs/app.js: houd gelijk
+// penseel zoals de editor van remove.bg: gum (alpha 0) of herstellen (originele pixels terug)
+let painting = false, queued = false;
+const redraw = () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; render(); }); } };
+async function originalPixels() {  // originele foto op de maat van het resultaat (ook als die verkleind was)
+  const bmp = await createImageBitmap(source);
+  const c = Object.assign(document.createElement('canvas'), { width: cutout.width, height: cutout.height });
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(bmp, 0, 0, c.width, c.height); bmp.close();
+  const px = x.getImageData(0, 0, c.width, c.height).data;
+  c.width = c.height = 0;
+  return px;
+}
+async function paint(e) {
+  const mode = $('brush').value;
+  if (!mode || !cutout || !rect) return;
+  const c = $('out'), b = c.getBoundingClientRect(), k = c.width / b.width;
+  const cx = rect.x + (e.clientX - b.left) * k, cy = rect.y + (e.clientY - b.top) * k;
+  const rad = Number($('brushsize').value) * k / 2;  // grootte in schermpixels
+  const o = mode === 'restore' && source ? await (origP ??= originalPixels()) : null;
+  const d = cutout.data, W = cutout.width;
+  for (let y = Math.max(0, Math.floor(cy - rad)); y <= Math.min(cutout.height - 1, cy + rad); y++)
+    for (let x = Math.max(0, Math.floor(cx - rad)); x <= Math.min(W - 1, cx + rad); x++) {
+      if ((x - cx) ** 2 + (y - cy) ** 2 > rad * rad) continue;
+      const i = 4 * (y * W + x);
+      if (o) { d[i] = o[i]; d[i + 1] = o[i + 1]; d[i + 2] = o[i + 2]; d[i + 3] = 255; } else d[i + 3] = 0;
+    }
+  redraw();
+}
+const out = $('out');
+out.onpointerdown = e => {
+  if (!$('brush').value) return;
+  painting = true;
+  try { out.setPointerCapture(e.pointerId); } catch {}
+  paint(e);
+};
+out.onpointermove = e => { if (painting) paint(e); };
+out.onpointerup = out.onpointercancel = () => { if (painting) { painting = false; box = subjectBox(cutout); } };
+$('brush').onchange = () => { out.style.touchAction = $('brush').value ? 'none' : ''; out.style.cursor = $('brush').value ? 'crosshair' : ''; };
 </script>
 </body>
 </html>
