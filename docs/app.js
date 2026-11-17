@@ -86,12 +86,13 @@ worker.onmessage = async ({ data: m }) => {
   if (m.type === 'ready') return ready(m);
   if (m.type === 'progress') { status(m.text); return bar(m.frac); }
   if (m.type === 'error') { setBusy(false); bar(); status('Mislukt: ' + m.message); return next(); }
-  cutout = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
+  let res = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
   const tf = performance.now();
-  if (full) {  // nog 'bezig' houden: anders kan een nieuwe foto name/pending overschrijven tijdens het wachten
+  if (full) {  // nog 'bezig' houden: anders kan een nieuwe foto pending overschrijven tijdens het wachten
     status('Terug naar de volledige resolutie…');
-    cutout = await fullSize(cutout, pending, full).catch(() => cutout);  // lukt het niet: verkleind resultaat
+    res = await fullSize(res, pending, full).catch(() => res);  // lukt het niet: verkleind resultaat
   }
+  cutout = res;  // pas nu: tijdens het opschalen werkt het penseel nog in het getoonde resultaat
   (self.__timings ||= []).push({ openen: Math.round(openMs), ...m.steps, opschalen: Math.round(performance.now() - tf) });  // voor de rooktest
   setBusy(false);
   bar();
@@ -100,6 +101,7 @@ worker.onmessage = async ({ data: m }) => {
   $('result').hidden = false;
   $('download').disabled = false;
   source = pending; origP = null;
+  name = pending.name.replace(/\.[^.]+$/, '') || 'alphamaker';  // hier, niet in handle(): de lijst kiezen tijdens het rekenen wijzigt name
   for (let n = 2, base = name; results.some(r => r.name === name); n++) name = `${base} (${n})`;  // dubbele namen onderscheiden
   results.push({ name, cutout, box, file: source });
   if (results.length > 20) results.shift();
@@ -112,7 +114,6 @@ worker.onerror = e => { status('De rekenkern kon niet starten' + (e.message ? ':
 async function handle(file) {
   if (!backend) return status('De rekenkern is niet beschikbaar; herlaad de pagina.');
   setBusy(true);
-  name = file.name.replace(/\.[^.]+$/, '') || 'alphamaker';
   if ($('orig').src) URL.revokeObjectURL($('orig').src);
   $('orig').src = URL.createObjectURL(file);
   $('download').disabled = true;
@@ -122,7 +123,8 @@ async function handle(file) {
     const bmp = await createImageBitmap(file);
     let w = bmp.width, h = bmp.height;
     note = ''; full = null;
-    const limit = $('snel').checked ? 3_000_000 : MAX_PIXELS;  // voorkeur snelheid boven precisie
+    // voorkeur snelheid boven precisie; boven 50 MP schaalt niets terug, dan zou Snel alleen pixels kosten
+    const limit = $('snel').checked && w * h <= MAX_OUTPUT ? 3_000_000 : MAX_PIXELS;
     if (w * h > limit) {
       const s = Math.sqrt(limit / (w * h));
       if (w * h <= MAX_OUTPUT) full = { w, h };  // daarna weer naar de volle maat
@@ -263,7 +265,8 @@ async function paint(e) {
   const c = $('out'), b = c.getBoundingClientRect(), k = c.width / b.width;
   const cx = rect.x + (e.clientX - b.left) * k, cy = rect.y + (e.clientY - b.top) * k;
   const rad = Number($('brushsize').value) * k / 2;  // grootte in schermpixels
-  const o = mode === 'restore' && source ? await (origP ??= originalPixels()) : null;
+  const img = cutout, o = mode === 'restore' && source ? await (origP ??= originalPixels()) : null;
+  if (img !== cutout) return;  // tijdens het laden van het origineel is een ander resultaat gekozen
   const d = cutout.data, W = cutout.width;
   for (let y = Math.max(0, Math.floor(cy - rad)); y <= Math.min(cutout.height - 1, cy + rad); y++)
     for (let x = Math.max(0, Math.floor(cx - rad)); x <= Math.min(W - 1, cx + rad); x++) {

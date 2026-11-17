@@ -67,11 +67,12 @@ def main(argv=None):
     ap.add_argument('--model', choices=core.SEGMENTERS, help=f'standaard: {core.DEFAULT_MODEL}')
     ap.add_argument('--type', choices=['auto', 'persoon', 'object'],
                     help='zoals remove.bg type: persoon → birefnet-general (beste voor haar, traag), '
-                         'object → rmbg-1.4 (beste en snelste voor objecten, niet-commercieel), '
-                         'auto → per foto kiezen met de router van withoutBG (350 MB extra download)')
+                         'object → rmbg-1.4 (snelst, goed bij rustige productfoto\'s; bij drukke foto\'s is de standaard '
+                         'betrouwbaarder; niet-commercieel), '
+                         'auto → per foto kiezen met de router van withoutBG: haar → persoon, anders object (350 MB extra download)')
     ap.add_argument('--voorkeur', choices=['snel', 'precies'],
-                    help='snel: RMBG-1.4 en foto\'s boven 3 MP eerst verkleinen (zoals 50%% bij een telefoonfoto); '
-                         'precies: per foto het beste model kiezen (--type auto), op volle resolutie')
+                    help='snel: RMBG-1.4 (niet-commercieel) en foto\'s boven 3 MP eerst verkleinen (zoals 50%% bij een telefoonfoto); '
+                         'precies: per foto kiezen zoals --type auto, op volle resolutie')
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
     ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')

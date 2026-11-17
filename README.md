@@ -16,7 +16,7 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 
 ## Wat het doet
 
-1. **Segmentatie** met het best gemeten open model: standaard InSPyReNet (`transparent-background`, MIT) als veilig compromis; voor portretten met veel haar BiRefNet general (`--type persoon`), voor objecten en producten RMBG-1.4 (`--type object`: beter én sneller, wel niet-commercieel). Het masker wordt op de originele maat opgeleverd.
+1. **Segmentatie** met het best gemeten open model: standaard InSPyReNet (`transparent-background`, MIT) als veilig compromis; voor portretten met veel haar BiRefNet general (`--type persoon`), voor rustige productfoto's RMBG-1.4 (`--type object`: daar beter én sneller, wel niet-commercieel; bij drukke foto's neemt het te veel mee). Het masker wordt op de originele maat opgeleverd.
 2. **Randkleurcorrectie** ("blur fusion", Forte & Pitié 2021): de kleur van de oude achtergrond wordt uit haar en randen gehaald, zodat er geen gekleurde halo overblijft op een nieuwe achtergrond. remove.bg doet iets vergelijkbaars ("edge color corrections").
 3. Optioneel, experimenteel: **fijne randen** met ViTMatte, in tegels op volle resolutie. In onze benchmark werd dat niet beter (zie hieronder), daarom staat het standaard uit.
 
@@ -36,7 +36,7 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 
 > ⚠️ **Correctie (17 nov 2026): de objectscore van InSPyReNet is besmet.** Het standaard-checkpoint van transparent-background ("Plus Ultra") is volgens de model zoo van InSPyReNet getraind op onder meer DIS-VD, dus op onze objecttestbeelden. De schone InSPyReNet-versie (alleen DIS-TR) haalt op objecten 0,115 en op haar 0,108. Eerlijk gemeten is **RMBG-1.4 het beste op objecten (0,066)** en **BiRefNet general het beste op haar (0,067)**. De haarscore van InSPyReNet (0,075) is wel schoon. Zie de tabel hieronder voor de schone scores per soort foto.
 >
-> ⚠️ **Nieuw (17 nov): rommelige foto's.** Op 60 nieuwe objectfoto's (synthetisch, 2025, uit de S3OD-set) scoort RMBG-1.4 het slechtst: rand 0,19 tegen 0,13 voor InSPyReNet en 0,11 voor BiRefNet general. Bekeken: RMBG-1.4 laat bij drukke foto's alles op de voorgrond staan (een hele zonnebloem in plaats van het lieveheersbeestje, het hele aanrecht in plaats van de pan); bij 18 van de 60 foto's 20% of meer te veel, tegen 2 bij InSPyReNet. Besmetting met de DIS-foto's is daarmee niet aangetoond. Voor een rustige productfoto blijft RMBG-1.4 snel en goed; staat er meer in beeld, neem dan InSPyReNet.
+> ⚠️ **Nieuw (17 nov): rommelige foto's.** Op 60 nieuwe objectfoto's (synthetisch, 2025, uit de S3OD-set) scoort RMBG-1.4 het slechtst: rand 0,19 tegen 0,13 voor InSPyReNet en 0,11 voor BiRefNet general (gemeten op 22 van de 60 foto's; daarna liep het tegen de geheugengrens van 4,5 GB aan). Bekeken: RMBG-1.4 laat bij drukke foto's alles op de voorgrond staan (een hele zonnebloem in plaats van het lieveheersbeestje, het hele aanrecht in plaats van de pan); bij 18 van de 60 foto's 20% of meer te veel, tegen 2 bij InSPyReNet. Besmetting met de DIS-foto's is daarmee niet aangetoond. Voor een rustige productfoto blijft RMBG-1.4 snel en goed; staat er meer in beeld, neem dan InSPyReNet.
 
 **Schoon gemeten per soort foto** (150 beelden over twee sets: 100 objecten uit DIS-VD en 50 portretten uit PPM-100). De objectscores van InSPyReNet staan tussen haakjes, omdat ze besmet en dus te gunstig zijn.
 
@@ -51,11 +51,11 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 
 Een misser is een beeld met IoU < 0,8: er mist een flink stuk van het onderwerp, of er staat een stuk achtergrond bij.
 
-- **Objecten en producten: RMBG-1.4.** Het scoort het best op alle maten en is ook het snelst, maar het is niet-commercieel. Gebruik `--type object`. Het is ook de standaard in de webversie.
+- **Rustige objectfoto's en producten: RMBG-1.4.** Op de DIS-objecten scoort het het best op alle maten en het is het snelst, maar het is niet-commercieel, en bij drukke foto's neemt het te veel mee (zie de waarschuwing hierboven). Gebruik `--type object`. Het is ook de standaard in de webversie.
 - **Portretten en haar: BiRefNet general** is het nauwkeurigst, maar traag. Gebruik `--type persoon`, vergelijkbaar met `type=person` bij remove.bg. **InSPyReNet** is bijna even goed en 3× sneller.
 - **Standaard in de app: InSPyReNet.** Als je niet weet wat er op de foto staat, is dit het veiligste compromis: geen enkele misser op portretten, redelijk op objecten, en een MIT-licentie. De echte objectscore is onbekend, maar zelfs met het voordeel van de besmetting verliest het daar van RMBG-1.4. RMBG-1.4 is 8× sneller, maar mist op portretten vaker een stuk (MAE 5× hoger).
 - **Automatisch kiezen: `--type auto`.** De router van withoutBG (open weights v4) kijkt per foto of er haar op staat (ongeveer 1 s). Bij haar gaat de foto naar BiRefNet general, anders naar RMBG-1.4. Op de schone test levert dat objecten 0,066 en portretten 0,075 op (2 missers), dus op beide soorten het beste van twee werelden. De router herkende 37 van de 50 portretten als haar en geen enkel object. Het kost 350 MB extra download, en objecten lopen via RMBG-1.4 (niet-commercieel). Daarom is het een optie en niet de standaard.
-- **Nieuwe kandidaten (nov 2026)** uit `bench/testplan-2026-11.json`: MVANet (licht en zwaar) en Finegrain scoren op beide soorten foto's slechter. MODNet (portretten) heeft slechtere haarranden dan RMBG-1.4 (0,127 tegen 0,105). De matting-tak van withoutBG is op portretten beter dan RMBG-1.4 (0,096, 1 misser), maar blijft achter bij InSPyReNet en BiRefNet. BiRefNet_dynamic past niet in 3,9 GB en wacht op meer vrij geheugen. S3OD en PDFNet worden nu getest.
+- **Nieuwe kandidaten (nov 2026)** uit `bench/testplan-2026-11.json`: MVANet (licht en zwaar) en Finegrain scoren op beide soorten foto's slechter. MODNet (portretten) heeft slechtere haarranden dan RMBG-1.4 (0,127 tegen 0,105). De matting-tak van withoutBG is op portretten beter dan RMBG-1.4 (0,096, 1 misser), maar blijft achter bij InSPyReNet en BiRefNet. S3OD is slechter dan RMBG-1.4: op objecten 0,104 (s3od-dis) en 0,133 (s3od-synth) tegen 0,066, op haar 0,128 (s3od-dis) tegen 0,105. PDFNet en BiRefNet_dynamic passen niet in 3,9 GB en zijn niet getest.
 - **RMBG-1.4 werkt alleen goed op 1024 px.** Op 768 of 1280 px (zelfde gewichten, vrije invoermaat) worden de randen veel slechter (0,124 en 0,085 tegen 0,066). Spiegelen en middelen wint 1% op objecten voor 2× de rekentijd; meerdere maten middelen is slechter. Sneller wordt het dus alleen door minder pixels na te bewerken (`--voorkeur snel`, of 'Snel' in de webversie).
 - **Combineren** (maskers middelen) leverde niets op. InSPyReNet + RMBG-1.4 gaf iets betere randen (0,075) maar een hogere totale fout; met BiRefNet erbij werd het slechter.
 - **rand-MAE** is de gemiddelde fout in de randzone (halfdoorzichtige pixels plus een band van 8 px rond de contour); daar zit het verschil in haar en fijne details. **MAE** is de fout over het hele beeld, **IoU** de overlap van het masker.
@@ -96,10 +96,10 @@ pip install -e .
 alphamaker foto.jpg                          # → foto-alpha.png
 alphamaker *.jpg -o uitvoer/
 alphamaker portret.jpg --type persoon       # beste model voor haar (BiRefNet general)
-alphamaker product.jpg --type object       # beste en snelste voor objecten (RMBG-1.4, niet-commercieel)
+alphamaker product.jpg --type object       # snelst, goed bij rustige productfoto's (RMBG-1.4, niet-commercieel)
 alphamaker *.jpg --type auto               # per foto kiezen: haar → BiRefNet general, anders RMBG-1.4
 alphamaker *.jpg --voorkeur snel           # snelst: RMBG-1.4, foto's boven 3 MP eerst verkleinen
-alphamaker *.jpg --voorkeur precies        # nauwkeurigst: per foto het beste model, volle resolutie
+alphamaker *.jpg --voorkeur precies        # per foto kiezen zoals --type auto, volle resolutie
 alphamaker serve                             # webpagina op http://127.0.0.1:8092 (model kiezen, afwerken)
 
 # afwerken zoals bij remove.bg (alles lokaal):

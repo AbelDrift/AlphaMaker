@@ -1,5 +1,5 @@
 """AlphaMaker-kern: segmentatie (ONNX) → verfijning op volle resolutie → randkleurcorrectie."""
-import hashlib, os, urllib.request
+import hashlib, importlib.util, os, urllib.request
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -108,7 +108,7 @@ def kind(img):
 
 
 # veilig compromis (0 missers op portretten, MIT); objecten: rmbg-1.4, haar: birefnet-general (zie README)
-if __import__('importlib.util').util.find_spec('transparent_background'):  # opzoeken zonder torch te laden
+if all(importlib.util.find_spec(m) for m in ('transparent_background', 'torch')):  # opzoeken zonder torch te laden
     DEFAULT_MODEL = 'inspyrenet'
 else:
     DEFAULT_MODEL = 'birefnet-general' if pt.available() else 'isnet-general'
