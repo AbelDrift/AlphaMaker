@@ -103,6 +103,17 @@ def load(name):
         from transparent_background import Remover
         r = Remover(mode='base', device='cpu', ckpt=str(ROOT / 'models' / (name + '.pth')))
         return lambda img: np.asarray(r.process(img, type='map').convert('L'), np.float32) / 255
+    if name in ('s3od-dis', 's3od-synth'):  # S3OD (ICLR 2026; MIT + DINOv3-licentie), alleen in ~/venvs/am-kand (PY=...)
+        import torch
+        from s3od import BackgroundRemoval
+        torch.set_num_threads(4)
+        tl = torch.load  # hun predictor.py laadt met weights_only=False (volledige pickle): forceer True
+        torch.load = lambda f, *a, **k: tl(f, map_location='cpu', weights_only=True)
+        try:
+            m = BackgroundRemoval(model_id=str(ROOT / 'models' / (name + '.pt')), device='cpu')
+        finally:
+            torch.load = tl
+        return lambda img: m.remove_background(img).predicted_mask.astype(np.float32).clip(0, 1)
     if name == 'inspyrenet':  # transparent-background
         from transparent_background import Remover
         r = Remover(mode='base', device='cpu')

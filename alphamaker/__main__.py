@@ -56,9 +56,10 @@ def main(argv=None):
     ap.add_argument('files', nargs='+', help="afbeeldingen, of 'serve' voor de webpagina")
     ap.add_argument('-o', '--out', type=Path, help='uitvoermap (standaard naast het origineel)')
     ap.add_argument('--model', choices=core.SEGMENTERS, help=f'standaard: {core.DEFAULT_MODEL}')
-    ap.add_argument('--type', choices=['auto', 'persoon', 'object'], default='auto',
+    ap.add_argument('--type', choices=['auto', 'persoon', 'object'],
                     help='zoals remove.bg type: persoon → birefnet-general (beste voor haar, traag), '
-                         'object → rmbg-1.4 (beste en snelste voor objecten, niet-commercieel)')
+                         'object → rmbg-1.4 (beste en snelste voor objecten, niet-commercieel), '
+                         'auto → per foto kiezen met de router van withoutBG (350 MB extra download)')
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
     ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')
@@ -71,6 +72,7 @@ def main(argv=None):
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args(argv)
     by_type = {'persoon': 'birefnet-general' if core.pt.available() else None, 'object': 'rmbg-1.4'}
+    routed = a.type == 'auto' and not a.model  # een opgegeven --model gaat voor
     a.model = a.model or by_type.get(a.type) or core.DEFAULT_MODEL
     if a.files == ['serve']:
         Handler.model = a.model
@@ -80,12 +82,18 @@ def main(argv=None):
     bg = a.achtergrond or ('white' if a.formaat == 'jpg' and not a.achtergrondfoto and not a.alleen_masker else None)
     bg_image = Image.open(a.achtergrondfoto) if a.achtergrondfoto else None
     files = list(map(Path, a.files))
+    kinds = {}
+    if routed:  # eerst alles routeren, dan de router vrijgeven (geheugen)
+        kinds = {f: core.kind(Image.open(f)) for f in files}
+        core._sessions.pop('wbg-router', None)
     for n, f in enumerate(files, 1):
         dst = (a.out or f.parent) / f'{f.stem}-alpha.{a.formaat}'
         dst.parent.mkdir(parents=True, exist_ok=True)
-        cut = core.cutout(Image.open(f), a.model, refine_edges=a.fijne_randen)
+        model = by_type.get(kinds.get(f)) or a.model
+        cut = core.cutout(Image.open(f), model, refine_edges=a.fijne_randen)
         core.finish(cut, a.bijsnijden, a.marge, a.alleen_masker, bg, bg_image, a.schaduw).save(dst, quality=95)
-        print(f'[{n}/{len(files)}] {dst}' if len(files) > 1 else dst, flush=True)
+        info = f'  ({kinds[f]} → {model})' if f in kinds else ''
+        print(f'[{n}/{len(files)}] {dst}{info}' if len(files) > 1 else f'{dst}{info}', flush=True)
 
 
 if __name__ == '__main__':

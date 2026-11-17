@@ -7,7 +7,7 @@ for m in $MODELS; do
   [ -f "$R/$m.status" ] && { echo "$m: al gedaan ($(cat $R/$m.status))"; continue; }
   echo "== $m  $(date +%T)"
   systemd-run --user --scope -q -p MemoryMax=${CAP:-4500M} -p MemorySwapMax=0 \
-    nice -n 10 .venv/bin/python bench/bench.py "$m"
+    nice -n 10 ${PY:-.venv/bin/python} bench/bench.py "$m"
   rc=$?
   [ $rc -eq 0 ] && echo ok > "$R/$m.status" || echo "fout rc=$rc (137=geheugenlimiet)" > "$R/$m.status"
   echo "$m: $(cat $R/$m.status)"

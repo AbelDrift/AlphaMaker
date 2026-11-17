@@ -52,7 +52,8 @@ Een misser is een beeld met IoU < 0,8: er mist een flink stuk van het onderwerp,
 - **Objecten en producten: RMBG-1.4.** Het scoort het best op alle maten en is ook het snelst, maar het is niet-commercieel. Gebruik `--type object`. Het is ook de standaard in de webversie.
 - **Portretten en haar: BiRefNet general** is het nauwkeurigst, maar traag. Gebruik `--type persoon`, vergelijkbaar met `type=person` bij remove.bg. **InSPyReNet** is bijna even goed en 3× sneller.
 - **Standaard in de app: InSPyReNet.** Als je niet weet wat er op de foto staat, is dit het veiligste compromis: geen enkele misser op portretten, redelijk op objecten, en een MIT-licentie. De echte objectscore is onbekend, maar zelfs met het voordeel van de besmetting verliest het daar van RMBG-1.4. RMBG-1.4 is 8× sneller, maar mist op portretten vaker een stuk (MAE 5× hoger).
-- **Nieuwe kandidaten (nov 2026)** uit `bench/testplan-2026-11.json`: MVANet (licht en zwaar) en Finegrain scoren op beide soorten foto's slechter. BiRefNet_dynamic past niet in 3,9 GB en wacht op meer vrij geheugen. S3OD, withoutBG en PDFNet vragen de installatie van externe code en zijn nog niet getest.
+- **Automatisch kiezen: `--type auto`.** De router van withoutBG (open weights v4) kijkt per foto of er haar op staat (ongeveer 1 s). Bij haar gaat de foto naar BiRefNet general, anders naar RMBG-1.4. Op de schone test levert dat objecten 0,066 en portretten 0,075 op (2 missers), dus op beide soorten het beste van twee werelden. De router herkende 37 van de 50 portretten als haar en geen enkel object. Het kost 350 MB extra download, en objecten lopen via RMBG-1.4 (niet-commercieel). Daarom is het een optie en niet de standaard.
+- **Nieuwe kandidaten (nov 2026)** uit `bench/testplan-2026-11.json`: MVANet (licht en zwaar) en Finegrain scoren op beide soorten foto's slechter. MODNet (portretten) heeft slechtere haarranden dan RMBG-1.4 (0,127 tegen 0,105). De matting-tak van withoutBG is op portretten beter dan RMBG-1.4 (0,096, 1 misser), maar blijft achter bij InSPyReNet en BiRefNet. BiRefNet_dynamic past niet in 3,9 GB en wacht op meer vrij geheugen. S3OD en PDFNet worden nu getest.
 - **Combineren** (maskers middelen) leverde niets op. InSPyReNet + RMBG-1.4 gaf iets betere randen (0,075) maar een hogere totale fout; met BiRefNet erbij werd het slechter.
 - **rand-MAE** is de gemiddelde fout in de randzone (halfdoorzichtige pixels plus een band van 8 px rond de contour); daar zit het verschil in haar en fijne details. **MAE** is de fout over het hele beeld, **IoU** de overlap van het masker.
 - **Beperkingen:** 50 beelden, één meting per model. Het verschil tussen de top-2 is klein.
@@ -93,6 +94,7 @@ alphamaker foto.jpg                          # → foto-alpha.png
 alphamaker *.jpg -o uitvoer/
 alphamaker portret.jpg --type persoon       # beste model voor haar (BiRefNet general)
 alphamaker product.jpg --type object       # beste en snelste voor objecten (RMBG-1.4, niet-commercieel)
+alphamaker *.jpg --type auto               # per foto kiezen: haar → BiRefNet general, anders RMBG-1.4
 alphamaker serve                             # webpagina op http://127.0.0.1:8092 (model kiezen, afwerken)
 
 # afwerken zoals bij remove.bg (alles lokaal):
@@ -131,6 +133,8 @@ Zie [`NOTES.md`](NOTES.md) voor het volledige logboek: onderzoek, keuzes, misluk
 ## Licenties
 
 De code van AlphaMaker valt onder MIT. De modellen hebben hun eigen licenties, zie de tabel. RMBG-1.4 en RMBG-2.0 zijn alleen voor niet-commercieel gebruik. RMBG-2.0 is alleen in de benchmark gebruikt, niet in de app. RMBG-1.4 is in de webversie de standaard zonder WebGPU; voor commercieel gebruik kies je daar een ander model of een licentie van Bria.
+
+De router voor `--type auto` komt uit withoutBG open weights v4 (`withoutbg/withoutbg-openweights-onnx`, revisie 232aa520): Apache-2.0 plus de voorwaarden van DINOv3. Built with DINOv3. Hun modelpagina noemt daarnaast een aparte commerciële licentie; check die zelf bij commercieel gebruik.
 
 ---
 

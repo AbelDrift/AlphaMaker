@@ -36,10 +36,13 @@ def test_cli_type_kiest_model():
     try:
         out = Path(__file__).resolve().parent / '_tmp.png'
         Image.new('RGB', (8, 8)).save(out)
-        for t, expected in (('persoon', 'birefnet-general' if core.pt.available() else core.DEFAULT_MODEL), ('object', 'rmbg-1.4')):
+        persoon = 'birefnet-general' if core.pt.available() else core.DEFAULT_MODEL
+        core_kind, core.kind = core.kind, lambda img: 'persoon'  # nep-router: geen download in de test
+        for t, expected in (('persoon', persoon), ('object', 'rmbg-1.4'), ('auto', persoon), (None, core.DEFAULT_MODEL)):
             seen.clear()
-            cli.main([str(out), '--type', t, '-o', str(out.parent)])
+            cli.main([str(out), '-o', str(out.parent)] + (['--type', t] if t else []))
             assert seen['model'] == expected, (t, seen)
+        core.kind = core_kind
     finally:
         core.cutout = core_cutout
         for f in out.parent.glob('_tmp*.png'): f.unlink()
