@@ -1,0 +1,103 @@
+== wbg-matting  09:59:01
+wbg-matting geladen in 0.5s
+route hard_opaque
+{'img': 'dis_1#Accessories#1#Bag#3811492306_4ae60c73b', 'mae': 0.015960825607180595, 'edge_mae': 0.1442365199327469, 'iou': 0.9612681285560211, 'sec': 1.7669079303741455, 'peak_mb': 792}
+route hard_opaque
+{'img': 'dis_1#Accessories#5#Jewelry#2744070193_14865', 'mae': 0.021140027791261673, 'edge_mae': 0.1116168424487114, 'iou': 0.8688949719060655, 'sec': 1.4954495429992676, 'peak_mb': 792}
+route hard_opaque
+{'img': 'dis_10#Frame#2#BicycleFrame#16378409939_16b0', 'mae': 0.008148415945470333, 'edge_mae': 0.12459062039852142, 'iou': 0.9681639381722624, 'sec': 1.6965968608856201, 'peak_mb': 810}
+route vehicle
+{'img': 'dis_10#Frame#5#Rack#7452728474_502d7920fb_o', 'mae': 0.003994890954345465, 'edge_mae': 0.10641399025917053, 'iou': 0.45769494626114793, 'sec': 1.5512933731079102, 'peak_mb': 810}
+route flat_scene
+{'img': 'dis_11#Furniture#11#Handrail#6056134825_edc2', 'mae': 0.11063005030155182, 'edge_mae': 0.30625391006469727, 'iou': 0.3784413570934545, 'sec': 1.9391124248504639, 'peak_mb': 810}
+route hard_opaque
+{'img': 'dis_11#Furniture#13#Ladder#50573001436_3dd45', 'mae': 0.010009209625422955, 'edge_mae': 0.14903581142425537, 'iou': 0.7957219819947544, 'sec': 1.5034973621368408, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_11#Furniture#18#TableChair#2425100387_f2', 'mae': 0.0760539174079895, 'edge_mae': 0.0946701169013977, 'iou': 0.6782389394303824, 'sec': 1.4459083080291748, 'peak_mb': 828}
+route transparency
+{'img': 'dis_11#Furniture#3#BunkBed#2102888828_377b55', 'mae': 0.009581503458321095, 'edge_mae': 0.11850372701883316, 'iou': 0.9818047846115454, 'sec': 1.4582419395446777, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_11#Furniture#4#Chair#8524074706_cf6c5420', 'mae': 0.09313900768756866, 'edge_mae': 0.21115460991859436, 'iou': 0.6361341403019057, 'sec': 1.5570108890533447, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_11#Furniture#9#Easel#26172892793_04deb7d', 'mae': 0.01512822974473238, 'edge_mae': 0.1031448021531105, 'iou': 0.8932465693381436, 'sec': 1.432271957397461, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_13#Insect#1#Ant#6017810856_da15224bf9_o', 'mae': 0.00949066411703825, 'edge_mae': 0.15933117270469666, 'iou': 0.820343030829353, 'sec': 1.4733209609985352, 'peak_mb': 828}
+route transparency
+{'img': 'dis_13#Insect#7#Dragonfly#14693028899_344ea1', 'mae': 0.046360865235328674, 'edge_mae': 0.22683943808078766, 'iou': 0.8098988651434009, 'sec': 1.4348137378692627, 'peak_mb': 828}
+route transparency
+{'img': 'dis_14#Kitchenware#10#WineGlass#509012516_9c', 'mae': 0.10412441939115524, 'edge_mae': 0.17446357011795044, 'iou': 0.6504793323861736, 'sec': 1.4723806381225586, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_14#Kitchenware#4#Kitchenware#49911483387', 'mae': 0.011791791766881943, 'edge_mae': 0.06316899508237839, 'iou': 0.9580859398210997, 'sec': 1.4788358211517334, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_16#Music Instrument#3#MusicStand#2224407', 'mae': 0.012798533774912357, 'edge_mae': 0.09457992017269135, 'iou': 0.9084579262697684, 'sec': 1.5329794883728027, 'peak_mb': 828}
+route hard_opaque
+{'img': 'dis_17#Non-motor Vehicle#1#BabyCarriage#6676', 'mae': 0.035301100462675095, 'edge_mae': 0.20277513563632965, 'iou': 0.8845723319633731, 'sec': 1.48274564743042, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_17#Non-motor Vehicle#2#Bicycle#139155028', 'mae': 0.03159140422940254, 'edge_mae': 0.1291802078485489, 'iou': 0.8958384012275219, 'sec': 1.4374871253967285, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_17#Non-motor Vehicle#4#Cart#2560972649_7', 'mae': 0.08351553976535797, 'edge_mae': 0.17578312754631042, 'iou': 0.5252909220663842, 'sec': 1.460200548171997, 'peak_mb': 829}
+route soft_detail
+{'img': 'dis_18#Plant#2#Tree#37197398761_9f351fcb47_o', 'mae': 0.06072605401277542, 'edge_mae': 0.15902505815029144, 'iou': 0.8229529702001018, 'sec': 1.5173556804656982, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_2#Aircraft#1#Airplane#3159745725_a09a847', 'mae': 0.045425012707710266, 'edge_mae': 0.12842899560928345, 'iou': 0.8601921816767006, 'sec': 1.4656167030334473, 'peak_mb': 829}
+route soft_detail
+{'img': 'dis_2#Aircraft#4#Helicopter#316924426_71270f', 'mae': 0.012293906882405281, 'edge_mae': 0.07083620876073837, 'iou': 0.9647092498722794, 'sec': 1.4440228939056396, 'peak_mb': 829}
+route soft_detail
+{'img': 'dis_20#Sports#14#Wakesurfing#5589577652_5061', 'mae': 0.008891523815691471, 'edge_mae': 0.09340006113052368, 'iou': 0.9324567575970806, 'sec': 1.5470499992370605, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_21#Tool#10#Spade#51066653402_7d56e9ea2b_', 'mae': 0.006287340074777603, 'edge_mae': 0.4526532292366028, 'iou': 0.034036674202461696, 'sec': 1.453202247619629, 'peak_mb': 829}
+route soft_detail
+{'img': 'dis_21#Tool#14#Sword#9884911783_82e176fc64_o', 'mae': 0.018922647461295128, 'edge_mae': 0.10760354995727539, 'iou': 0.8000079464409877, 'sec': 1.4328501224517822, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_21#Tool#3#Clock#16319150470_791cb7af1d_o', 'mae': 0.005838838871568441, 'edge_mae': 0.08018352091312408, 'iou': 0.9499654677787813, 'sec': 1.4419584274291992, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_21#Tool#7#Rope#37462446126_7e85c5158b_o', 'mae': 0.07955413311719894, 'edge_mae': 0.2095329314470291, 'iou': 0.4466151749204907, 'sec': 1.4857752323150635, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_22#Weapon#2#MachineGun#3306039582_f0b443', 'mae': 0.011804296635091305, 'edge_mae': 0.12506327033042908, 'iou': 0.8856463774908151, 'sec': 1.4302122592926025, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_3#Aquatic#2#Seadragon#4112508011_118c3f9', 'mae': 0.010479013435542583, 'edge_mae': 0.12113741785287857, 'iou': 0.8910293122299162, 'sec': 1.447558879852295, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_4#Architecture#11#Pipe#134777005_028ae70', 'mae': 0.024923834949731827, 'edge_mae': 0.11644958704710007, 'iou': 0.922670679814464, 'sec': 1.5210039615631104, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_4#Architecture#13#Sculpture#14428777691_', 'mae': 0.027424968779087067, 'edge_mae': 0.17504163086414337, 'iou': 0.7728401944788345, 'sec': 1.4281089305877686, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_4#Architecture#13#Sculpture#IMG_20210512', 'mae': 0.015180891379714012, 'edge_mae': 0.13095468282699585, 'iou': 0.7120130707713475, 'sec': 1.4368188381195068, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_4#Architecture#19#Windmill#2928111082_ce', 'mae': 0.027151459828019142, 'edge_mae': 0.1315620243549347, 'iou': 0.8615657430541909, 'sec': 1.4340462684631348, 'peak_mb': 829}
+route soft_detail
+{'img': 'dis_4#Architecture#3#Crack#512670226_baf557b', 'mae': 0.017675407230854034, 'edge_mae': 0.32244694232940674, 'iou': 0.22262920624698115, 'sec': 1.4503910541534424, 'peak_mb': 829}
+route hard_opaque
+{'img': 'dis_4#Architecture#5#GasStation#8924283077_0', 'mae': 0.00894885417073965, 'edge_mae': 0.06803674250841141, 'iou': 0.8283172969344372, 'sec': 1.4514539241790771, 'peak_mb': 831}
+route hard_opaque
+{'img': 'dis_5#Artifact#1#Basket#3165387320_b30aa630e', 'mae': 0.05158747360110283, 'edge_mae': 0.2619677782058716, 'iou': 0.6203200444927572, 'sec': 1.512357473373413, 'peak_mb': 831}
+route hard_opaque
+{'img': 'dis_5#Artifact#5#Toy#3414533735_25c1044c73_o', 'mae': 0.010081610642373562, 'edge_mae': 0.07762227207422256, 'iou': 0.9798713087241018, 'sec': 1.4771974086761475, 'peak_mb': 831}
+route hard_opaque
+{'img': 'dis_6#Automobile#2#CableLift#1464685568_3615', 'mae': 0.0349942222237587, 'edge_mae': 0.14635887742042542, 'iou': 0.8747702177909256, 'sec': 1.4444928169250488, 'peak_mb': 831}
+route hard_opaque
+{'img': 'dis_6#Automobile#7#Forklift#80906844_f551595', 'mae': 0.01307564228773117, 'edge_mae': 0.1511458307504654, 'iou': 0.9656005201721523, 'sec': 1.4397776126861572, 'peak_mb': 831}
+route hard_opaque
+{'img': 'dis_7#Electrical#1#Cable#48675437508_851a5f4', 'mae': 0.023418420925736427, 'edge_mae': 0.13483865559101105, 'iou': 0.8504506856779585, 'sec': 1.4710168838500977, 'peak_mb': 831}
+route hard_opaque
+{'img': 'dis_7#Electrical#4#FloorLamp#14232622256_d57', 'mae': 0.01151827909052372, 'edge_mae': 0.0978742316365242, 'iou': 0.8802465432132435, 'sec': 1.4521117210388184, 'peak_mb': 831}
+route fine_strand
+{'img': 'ppm_13179159164_1a4ae8d085_o', 'mae': 0.011564644053578377, 'edge_mae': 0.19041499495506287, 'iou': 0.972048046738983, 'sec': 1.4465060234069824, 'peak_mb': 831}
+route vehicle
+{'img': 'ppm_15372445161_8f9a002163_o', 'mae': 0.006787632126361132, 'edge_mae': 0.1178855299949646, 'iou': 0.9350744328154457, 'sec': 1.5952556133270264, 'peak_mb': 831}
+route fine_strand
+{'img': 'ppm_16731963546_3148ea2b33_o', 'mae': 0.00845756009221077, 'edge_mae': 0.08415920287370682, 'iou': 0.9797266476322414, 'sec': 1.545841932296753, 'peak_mb': 831}
+route fine_strand
+{'img': 'ppm_17464489461_0e158881db_o', 'mae': 0.007572713308036327, 'edge_mae': 0.1142178475856781, 'iou': 0.9803913925925514, 'sec': 1.485976219177246, 'peak_mb': 831}
+route fine_strand
+{'img': 'ppm_24179781765_21532649fd_o', 'mae': 0.0070150988176465034, 'edge_mae': 0.11535666882991791, 'iou': 0.9847104567879452, 'sec': 1.5798797607421875, 'peak_mb': 831}
+route hard_opaque
+{'img': 'ppm_26843142809_f237ef41de_o', 'mae': 0.002988163847476244, 'edge_mae': 0.09067801386117935, 'iou': 0.9747046646918163, 'sec': 1.4727141857147217, 'peak_mb': 831}
+route hard_opaque
+{'img': 'ppm_48625101712_675622d1f4_o', 'mae': 0.0017690940294414759, 'edge_mae': 0.06834480911493301, 'iou': 0.9855344280612143, 'sec': 2.183480978012085, 'peak_mb': 831}
+route fine_strand
+{'img': 'ppm_49158639747_c516378273_o', 'mae': 0.010788834653794765, 'edge_mae': 0.08604583144187927, 'iou': 0.9716137645136925, 'sec': 1.5457963943481445, 'peak_mb': 831}
+route hard_opaque
+{'img': 'ppm_5588688353_3426d4b5d9_o', 'mae': 0.002401156583800912, 'edge_mae': 0.05936417728662491, 'iou': 0.9813309371531265, 'sec': 1.436769962310791, 'peak_mb': 831}
+route soft_detail
+{'img': 'ppm_8611028976_bd1f1bd214_o', 'mae': 0.002536698477342725, 'edge_mae': 0.09247709065675735, 'iou': 0.9706074977416441, 'sec': 1.4471533298492432, 'peak_mb': 831}
+wbg-matting: ok
