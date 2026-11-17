@@ -61,6 +61,7 @@ const stats = await evaluate(`(() => {
   return c.width + 'x' + c.height + ', transparant ' + (100 * t / n).toFixed(1) + '%, halfdoorzichtig ' + (100 * h / n).toFixed(1) + '%';
 })()`);
 console.log('resultaat:', stats);
+console.log('tijden per foto (ms):', await evaluate('JSON.stringify(self.__timings ?? [])'));
 const listed = await evaluate(`document.querySelectorAll('#list button').length`);
 console.log('in de lijst:', listed);
 // afwerking zoals remove.bg: bijsnijden (5% marge) + schaduw + witte achtergrond → kleiner en volledig dekkend

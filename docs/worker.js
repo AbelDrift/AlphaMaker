@@ -110,15 +110,19 @@ async function run({ rgba: buffer, w, h, model, refine, matte }) {
   if (!(w > 0 && h > 0 && w * h <= MAX_PIXELS && rgba.length === 4 * w * h)) throw new Error('ongeldige afbeelding.');
   const spec = MODELS[model], file = spec?.files[backend];
   if (!file) throw new Error('dit model werkt niet op dit apparaat.');
+  const marks = [['laden', t0]];  // tijd per stap, voor de rooktest en om traagheid te vinden
+  let modelMs = 0;
   const seg = await session(slots.seg, model, file, spec.label);
   const vm = refine ? await session(slots.matte, matte, VITMATTE[matte] ?? VITMATTE.q, 'Verfijningsmodel') : null;
   const meta = seg.inputMetadata?.[0], dim = meta?.shape?.[2];
   const size = Number.isInteger(dim) && dim > 0 ? dim : spec.size;  // vaste invoermaat van het model wint, zoals in core.segment
   await cutout(rgba, w, h, { ...spec, size },
-    x => infer(seg, { [seg.inputNames[0]]: tensor(meta?.type, x, [1, 3, size, size]) }),
+    async x => { const t = performance.now(), r = await infer(seg, { [seg.inputNames[0]]: tensor(meta?.type, x, [1, 3, size, size]) }); modelMs += performance.now() - t; return r; },
     vm && ((x, hp, wp) => infer(vm, { pixel_values: new ort.Tensor('float32', x, [1, 4, hp, wp]) }, 'alphas').then(r => r.data)),
-    (step, j, n) => progress(n ? `${STEPS[step]} tegel ${j + 1} van ${n}` : STEPS[step], n ? j / n : null));
-  post('done', { rgba: rgba.buffer, w, h, ms: performance.now() - t0 }, [rgba.buffer]);
+    (step, j, n) => { if (!j) marks.push([step, performance.now()]); progress(n ? `${STEPS[step]} tegel ${j + 1} van ${n}` : STEPS[step], n ? j / n : null); });
+  const end = performance.now(), steps = { model: Math.round(modelMs) };  // model = alleen session.run, binnen 'segment'
+  marks.forEach(([s, t], i) => { steps[s] = Math.round((marks[i + 1]?.[1] ?? end) - t); });
+  post('done', { rgba: rgba.buffer, w, h, ms: end - t0, steps }, [rgba.buffer]);
 }
 
 // één foto tegelijk: een sessiewissel mag nooit een sessie vrijgeven die nog rekent

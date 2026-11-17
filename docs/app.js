@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 const status = t => { $('status').textContent = t; };
 const mb = bytes => Math.round(bytes / 2 ** 20);
 const worker = new Worker(new URL('worker.js', import.meta.url), { type: 'module' });
-let backend, cutout, busy, name = 'alphamaker', note = '';
+let backend, cutout, busy, name = 'alphamaker', note = '', openMs = 0;
 let source = null, origP = null, pending = null, full = null;  // full: originele maat als de foto voor het rekenen verkleind is  // originele foto van het huidige resultaat (voor 'Herstellen')
 
 function setBusy(b) {
@@ -87,10 +87,12 @@ worker.onmessage = async ({ data: m }) => {
   if (m.type === 'progress') { status(m.text); return bar(m.frac); }
   if (m.type === 'error') { setBusy(false); bar(); status('Mislukt: ' + m.message); return next(); }
   cutout = new ImageData(new Uint8ClampedArray(m.rgba), m.w, m.h);
+  const tf = performance.now();
   if (full) {  // nog 'bezig' houden: anders kan een nieuwe foto name/pending overschrijven tijdens het wachten
     status('Terug naar de volledige resolutie…');
     cutout = await fullSize(cutout, pending, full).catch(() => cutout);  // lukt het niet: verkleind resultaat
   }
+  (self.__timings ||= []).push({ openen: Math.round(openMs), ...m.steps, opschalen: Math.round(performance.now() - tf) });  // voor de rooktest
   setBusy(false);
   bar();
   box = subjectBox(cutout);
@@ -116,6 +118,7 @@ async function handle(file) {
   $('download').disabled = true;
   try {
     status('Foto openen…');
+    const to = performance.now();
     const bmp = await createImageBitmap(file);
     let w = bmp.width, h = bmp.height;
     note = ''; full = null;
@@ -135,6 +138,7 @@ async function handle(file) {
     bmp.close();
     const { data } = ctx.getImageData(0, 0, w, h);
     ctx.canvas.width = ctx.canvas.height = 0;  // canvasgeheugen direct vrijgeven
+    openMs = performance.now() - to;
     pending = file;
     worker.postMessage({ rgba: data.buffer, w, h, model: $('model').value, refine: $('fijn').checked,
       matte: $('groot').checked ? 'fp32' : 'q' }, [data.buffer]);

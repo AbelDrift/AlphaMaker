@@ -122,19 +122,18 @@ export async function vitmatte(rgba, tri, w, h, runTile, tile = TILE, overlap = 
  *  gegeven (F = float32-vlak, wordt hergebruikt voor het volgende kanaal). */
 export function foregroundBlurFusion(rgba, alpha, w, h, sink, ks = [90, 6]) {
   const n = w * h, F = new Float32Array(n), B = new Float32Array(n), tmp = new Float32Array(n);
-  const bA = new Float32Array(n), b1 = new Float32Array(n);
+  // vervaagde alpha hangt niet af van het kanaal: één keer per straal; box(1 - a) = 1 - box(a)
+  const bAs = ks.map(k => boxFilterReflect(alpha, w, h, k));
   for (let c = 0; c < 3; c++) {
     for (let i = 0; i < n; i++) F[i] = B[i] = rgba[4 * i + c] / 255;
-    for (const k of ks) {
-      boxFilterReflect(alpha, w, h, k, bA);
-      for (let i = 0; i < n; i++) tmp[i] = 1 - alpha[i];
-      boxFilterReflect(tmp, w, h, k, b1);
+    for (const [j, k] of ks.entries()) {
+      const bA = bAs[j];
       for (let i = 0; i < n; i++) tmp[i] = F[i] * alpha[i];
       boxFilterReflect(tmp, w, h, k, F);
       for (let i = 0; i < n; i++) tmp[i] = B[i] * (1 - alpha[i]);
       boxFilterReflect(tmp, w, h, k, B);
       for (let i = 0; i < n; i++) {
-        const a = alpha[i], bf = f32(F[i] / f32(bA[i] + EPS)), bb = f32(B[i] / f32(b1[i] + EPS));
+        const a = alpha[i], bf = f32(F[i] / f32(bA[i] + EPS)), bb = f32(B[i] / f32(f32(1 - bA[i]) + EPS));
         F[i] = Math.min(1, Math.max(0, bf + a * (f32(rgba[4 * i + c] / 255) - a * bf - (1 - a) * bb)));
         B[i] = bb;
       }
