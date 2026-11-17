@@ -34,6 +34,8 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 | BEN2 | 0,123 | 0,125 | 0,116 | 0,025 | 0,856 | 16 | 3,9 GB | MIT |
 | BiRefNet lite | 0,125 | 0,137 | 0,077 | 0,034 | 0,825 | 28 | 2,5 GB | MIT |
 
+> ⚠️ **Correctie (17 nov 2026): de objectscore van InSPyReNet is besmet.** Het standaard-checkpoint van transparent-background ("Plus Ultra") is volgens de model zoo van InSPyReNet getraind op onder meer DIS-VD, dus op onze objecttestbeelden. De schone InSPyReNet-versie (alleen DIS-TR) haalt op objecten 0,115 en op haar 0,108. Eerlijk gemeten is **RMBG-1.4 het beste op objecten (0,066)** en **BiRefNet general het beste op haar (0,067)**. De haarscore van InSPyReNet (0,075) is wel schoon. De keuze van het standaardmodel wordt herzien zodra de nieuwe kandidaten gemeten zijn (`bench/testplan-2026-11.json`).
+
 **Bevestigd op een tweede schone set** (60 andere DIS-VD-beelden en 40 PPM-train-portretten, samen 150 beelden). De rand-MAE over alle 150 beelden: InSPyReNet 0,078 (objecten 0,079 / haar 0,075, MAE 0,009, IoU 0,954), RMBG-1.4 0,079 (0,066 / 0,105), BiRefNet general 0,090 (0,102 / **0,067**), IS-Net 0,108.
 
 - **InSPyReNet is de beste allrounder.** Het heeft de laagste totale fout en de beste overlap, is even goed op objecten als op haar, en is 3× sneller dan BiRefNet. Daarom is het de standaard in de app.

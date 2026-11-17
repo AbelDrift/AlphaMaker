@@ -205,3 +205,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - 01:40: S3OD-installatie (pip git+https van KupynOrest/s3od) GEWEIGERD door auto-mode-beveiliging → wacht op Abel
   (zelfde geldt waarschijnlijk voor withoutBG #3 en PDFNet #4: externe code). Zonder nieuwe code verder: unit
   `alphamaker-kand2` (na kand1): finegrain-box, mvanet-int8, mvanet (ONNX), pt-birefnet-dynamic (code = nagelezen general).
+- 02:25: nulmeting inspyrenet-dis5k (schoon): DIS 0.1152, PPM 0.1078, IoU 0.874 → bevestigt besmetting standaard-InSPyReNet op DIS. Eerlijk: objecten rmbg-1.4 0.0660 (NC), haar birefnet-general 0.0670 (MIT). README gecorrigeerd; standaardkeuze herzien na kand2.
