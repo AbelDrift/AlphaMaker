@@ -21,6 +21,10 @@ MODELS = {
     'u2net':            (REMBG + 'u2net.onnx', 320, IMNET, 'minmax'),
     'isnet-general':    (REMBG + 'isnet-general-use.onnx', 1024, HALF, 'minmax'),
     'rmbg-1.4':         (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model.onnx', 1024, HALF, 'minmax'),
+    # nieuwe kandidaten (testplan-2026-11.json), vaste revisies
+    'mvanet':           (HF + 'onnx-community/MVANet-ONNX/resolve/43ec3427514b8d9164eea02df93ca2f1b036bb7b/onnx/model.onnx', 1024, IMNET, 'auto'),
+    'mvanet-int8':      (HF + 'onnx-community/MVANet-ONNX/resolve/43ec3427514b8d9164eea02df93ca2f1b036bb7b/onnx/model_int8.onnx', 1024, IMNET, 'auto'),
+    'finegrain-box':    (HF + 'MarcinEU/finegrain-box-segmenter-ONNX/resolve/544d5cc37109d3e8d318e9368a2467fcd99ac8c5/onnx/model.onnx', 1024, IMNET, 'sigmoid'),
     'rmbg-1.4-q':       (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model_quantized.onnx', 1024, HALF, 'minmax'),  # webversie 'licht'
     'birefnet-lite':    (REMBG + 'BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx', 1024, IMNET, 'sigmoid'),
     'birefnet-general': (REMBG + 'BiRefNet-general-epoch_244.onnx', 1024, IMNET, 'sigmoid'),

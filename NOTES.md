@@ -202,3 +202,6 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   eigen venv, git-commit 11385423, torch.load weights_only=True forceren) · 3 withoutBG v4 matting · 4 PDFNet+DAv2-S ·
   5 MVANet-ONNX · 6 FeyNobg · 7 BiRefNet_dynamic · 8 Finegrain · 9 MGD-SAM2-HRSOD · 10 SAM2Matting (NC) · 11 ZIM (NC).
 - run_all.sh heeft nu CAP (standaard 4500M). Unit `alphamaker-kand1`: inspyrenet-dis5k, CAP=3900M (4,2 GB vrij, swap vol).
+- 01:40: S3OD-installatie (pip git+https van KupynOrest/s3od) GEWEIGERD door auto-mode-beveiliging → wacht op Abel
+  (zelfde geldt waarschijnlijk voor withoutBG #3 en PDFNet #4: externe code). Zonder nieuwe code verder: unit
+  `alphamaker-kand2` (na kand1): finegrain-box, mvanet-int8, mvanet (ONNX), pt-birefnet-dynamic (code = nagelezen general).

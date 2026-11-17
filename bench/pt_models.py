@@ -14,6 +14,7 @@ PT = {
     'pt-birefnet-lite':       ('ZhengPeng7/BiRefNet_lite', 'aa62cd87eafb9cc43056d08ef3615a14628b831d', 1024),
     'pt-birefnet-portrait':   ('ZhengPeng7/BiRefNet-portrait', 'b6561965a70070d9143fd9e558f6ca3c481510db', 1024),
     'pt-birefnet-hr-matting': ('ZhengPeng7/BiRefNet_HR-matting', '5d6b6f8adcb5b417c871b1d84ceaae9871355b7f', 2048),
+    'pt-birefnet-dynamic': ('ZhengPeng7/BiRefNet_dynamic', '280306042f57b7a33854319da62fd86aaa89ec4c', 1024),  # code nagelezen: = general
     'pt-rmbg-2.0':            ('mohantesting/remove_background', 'ddd449c55570b4effc5bce03a603d085299eec29', 1024),
 }
 
