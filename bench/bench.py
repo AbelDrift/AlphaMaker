@@ -114,6 +114,35 @@ def load(name):
         finally:
             torch.load = tl
         return lambda img: m.remove_background(img).predicted_mask.astype(np.float32).clip(0, 1)
+    if name == 'pdfnet':  # PDFNet_Best (CVPR 2026, MIT) + Depth Anything V2 Small (Apache-2.0); code in ~/am-kand/PDFNet
+        import argparse, cv2, torch
+        sys.path.insert(0, str(Path.home() / 'am-kand/PDFNet'))
+        from args import get_args_parser
+        from models.PDFNet import PDFNet_process, PDF_decoder, PDF_depth_decoder
+        from models.swin_transformer import SwinB
+        from DAM_V2.depth_anything_v2.dpt import DepthAnythingV2
+        torch.set_num_threads(4)
+        a = argparse.ArgumentParser(parents=[get_args_parser()]).parse_args(['--device', 'cpu'])
+        net = PDFNet_process(encoder=SwinB(args=a, in_chans=3, pretrained=False), decoder=PDF_decoder(args=a),
+                             depth_decoder=PDF_depth_decoder(args=a), device='cpu', args=a)
+        miss, unexp = net.load_state_dict(torch.load(ROOT / 'models/pdfnet-best.pth', map_location='cpu', weights_only=True), strict=False)
+        # hun demo laadt met strict=False (verbergt fouten); alleen depth_decoder.* mag over zijn: die zit alleen in de
+        # training (forward), in PDFNet_process.__init__ uitgecommentarieerd en niet in inference()
+        assert not miss and all(k.startswith('depth_decoder.') for k in unexp), (miss[:5], [k for k in unexp if not k.startswith('depth_decoder.')][:5])
+        net.eval()
+        dav2 = DepthAnythingV2(encoder='vits', features=64, out_channels=[48, 96, 192, 384])
+        dav2.load_state_dict(torch.load(ROOT / 'models/dav2-vits.pth', map_location='cpu', weights_only=True)); dav2.eval()
+        mean, std = np.array(IMNET[0], np.float32), np.array(IMNET[1], np.float32)
+        def predict(img):
+            rgb = np.asarray(img); H, W = rgb.shape[:2]
+            with torch.inference_mode():
+                depth = dav2.infer_image(np.ascontiguousarray(rgb[:, :, ::-1]))  # infer_image verwacht BGR
+                x = (cv2.resize(rgb, (1024, 1024)).astype(np.float32) / 255 - mean) / std
+                x = torch.from_numpy(x.transpose(2, 0, 1)[None].copy())
+                d = torch.from_numpy(cv2.resize(depth, (1024, 1024)))[None, None].float()
+                y = net.inference(x, d)[0][0, 0].numpy()
+            return cv2.resize(y, (W, H)).clip(0, 1)
+        return predict
     if name == 'inspyrenet':  # transparent-background
         from transparent_background import Remover
         r = Remover(mode='base', device='cpu')
