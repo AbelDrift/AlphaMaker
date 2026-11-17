@@ -153,6 +153,13 @@ def load(name):
     so.enable_cpu_mem_arena = False      # lagere geheugenpiek
     so.enable_mem_pattern = False       # geen vooraf gepland groot blok
     so.add_session_config_entry('session.disable_prepacking', '1')  # geen verpakte kopie van gewichten
+    if name.startswith('rmbg-1.4@'):  # RMBG-1.4 met vrije invoermaat (models/rmbg-1.4-dyn.onnx): @768, @1280, @flip, @ms
+        sess = ort.InferenceSession(str(ROOT / 'models' / 'rmbg-1.4-dyn.onnx'), so, providers=['CPUExecutionProvider'])
+        cfg, v = MODELS['rmbg-1.4'], name.split('@')[1]
+        at = lambda img, size=1024: predict_onnx(sess, (cfg[0], size, *cfg[2:]), img)
+        if v == 'flip': return lambda img: (at(img) + at(img.transpose(Image.Transpose.FLIP_LEFT_RIGHT))[:, ::-1]) / 2
+        if v == 'ms': return lambda img: np.mean([at(img, size) for size in (768, 1024, 1280)], 0)
+        return lambda img: at(img, int(v))
     if name == 'wbg-matting':  # withoutBG v4, altijd de matting-tak (testplan #3); bestanden in models/withoutbg
         d = ROOT / 'models' / 'withoutbg'
         sc = json.loads((d / 'withoutbg-open-weights.onnx.json').read_text())

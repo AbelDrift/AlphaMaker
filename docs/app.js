@@ -122,13 +122,14 @@ async function handle(file) {
     const bmp = await createImageBitmap(file);
     let w = bmp.width, h = bmp.height;
     note = ''; full = null;
-    if (w * h > MAX_PIXELS) {
-      const s = Math.sqrt(MAX_PIXELS / (w * h));
+    const limit = $('snel').checked ? 3_000_000 : MAX_PIXELS;  // voorkeur snelheid boven precisie
+    if (w * h > limit) {
+      const s = Math.sqrt(limit / (w * h));
       if (w * h <= MAX_OUTPUT) full = { w, h };  // daarna weer naar de volle maat
       const w0 = w, h0 = h;
       w = Math.max(1, Math.floor(w * s));
       h = Math.max(1, Math.floor(h * s));
-      note = full ? `Berekend op ${MAX_PIXELS / 1e6} megapixel en toegepast op de volledige foto (${w0}×${h0}).`
+      note = full ? `Berekend op ${limit / 1e6} megapixel en toegepast op de volledige foto (${w0}×${h0}).`
         : `De foto is verkleind van ${w0}×${h0} naar ${w}×${h} pixels: groter dan ${MAX_OUTPUT / 1e6} megapixel kan niet in de browser.`;
       status(note);
     }

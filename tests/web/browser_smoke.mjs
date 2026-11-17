@@ -1,7 +1,7 @@
 // Rooktest van de webversie in een echte (headless) Firefox via WebDriver BiDi — geen extra pakketten.
 // Gebruik: node tests/web/browser_smoke.mjs <url-van-pagina> <url-van-testfoto> [model]
 // Verwacht: Firefox gestart met --remote-debugging-port $BIDI_PORT (standaard 9333).
-const [url, photo, model = 'rmbg-1.4-licht'] = process.argv.slice(2);
+const [url, photo, model = 'rmbg-1.4-licht', snel = ''] = process.argv.slice(2);
 const ws = new WebSocket(`ws://127.0.0.1:${process.env.BIDI_PORT || 9333}/session`);
 let id = 0;
 const pending = new Map(), logs = [];
@@ -37,6 +37,7 @@ while (Date.now() - t0 < 60_000 && /laden/i.test(s = await status() ?? 'laden'))
 console.log('rekenkern:', await evaluate(`document.getElementById('engine')?.textContent ?? ''`), '| geïsoleerd:', await evaluate('self.crossOriginIsolated').catch(() => '?'));
 
 // lichtste model kiezen en de foto via het uploadveld aanbieden (zoals een gebruiker)
+if (snel) await evaluate(`document.getElementById('snel').checked = true`);
 console.log('model:', await evaluate(`(() => { const s = document.getElementById('model'); s.value = ${JSON.stringify(model)}; s.dispatchEvent(new Event('change')); return s.value; })()`));
 await evaluate(`(async () => {
   const b = await (await fetch(${JSON.stringify(photo)})).blob();

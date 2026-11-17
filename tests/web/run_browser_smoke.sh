@@ -9,4 +9,4 @@ trap cleanup EXIT
 python3 -m http.server --bind 127.0.0.1 8093 -d "$T/site" >/dev/null 2>&1 & SRV=$!
 firefox-esr --headless --no-remote -profile "$T/profiel" --remote-debugging-port 9333 about:blank >/dev/null 2>&1 & FF=$!
 for i in $(seq 1 30); do (echo > /dev/tcp/127.0.0.1/9333) 2>/dev/null && break; sleep 1; done
-node tests/web/browser_smoke.mjs http://127.0.0.1:8093/ http://127.0.0.1:8093/test.jpg "$MODEL"
+node tests/web/browser_smoke.mjs http://127.0.0.1:8093/ http://127.0.0.1:8093/test.jpg "$MODEL" "$3"
