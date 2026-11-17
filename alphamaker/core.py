@@ -84,7 +84,7 @@ def segment(img, name):
     return np.asarray(Image.fromarray(y).resize(img.size, Image.BILINEAR), np.float32).clip(0, 1)
 
 
-# beste allrounder op de schone testset (zie README); zonder PyTorch een licht ONNX-model
+# veilig compromis (0 missers op portretten, MIT); objecten: rmbg-1.4, haar: birefnet-general (zie README)
 try:
     import transparent_background  # noqa: F401
     DEFAULT_MODEL = 'inspyrenet'

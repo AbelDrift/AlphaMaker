@@ -206,3 +206,10 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   (zelfde geldt waarschijnlijk voor withoutBG #3 en PDFNet #4: externe code). Zonder nieuwe code verder: unit
   `alphamaker-kand2` (na kand1): finegrain-box, mvanet-int8, mvanet (ONNX), pt-birefnet-dynamic (code = nagelezen general).
 - 02:25: nulmeting inspyrenet-dis5k (schoon): DIS 0.1152, PPM 0.1078, IoU 0.874 → bevestigt besmetting standaard-InSPyReNet op DIS. Eerlijk: objecten rmbg-1.4 0.0660 (NC), haar birefnet-general 0.0670 (MIT). README gecorrigeerd; standaardkeuze herzien na kand2.
+- 2026-11-17 05:02: kand2 klaar (150 schone beelden). Per soort, rand/MAE/IoU/missers(IoU<0,8)/s:
+  objecten: rmbg-1.4 0.0660/0.0083/0.939/2/1.7 (beste + snelste); inspyrenet (besmet) 0.0787; birefnet-general 0.1019 (15 missers).
+  haar: birefnet-general 0.0670/0.0034/0.990/0/40.5; inspyrenet 0.0754/0.0048/0.989/0/14.1; rmbg-1.4 0.1049/0.0237/0.932/4.
+  Afgevallen: mvanet 0.1123/0.1148, mvanet-int8 0.1127/0.1132 (42 s), finegrain-box 0.1493/0.1492.
+  pt-birefnet-dynamic: OOM bij 3900M → unit alphamaker-dyn wacht op MemAvailable ≥ 6000 MB, draait dan met CAP 4500M (OOMScoreAdjust=800).
+  Besluit: app-standaard blijft InSPyReNet (compromis: 0 missers op haar, MIT); nieuw --type object → rmbg-1.4; --type persoon → birefnet-general.
+  Rest (S3OD, withoutBG, PDFNet, FeyNobg, ZIM, SAM2Matting, MGD-SAM2) vraagt externe code → wacht op Abel.

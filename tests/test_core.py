@@ -29,16 +29,17 @@ def test_backgrounds_and_shadow():
     assert b.size == (100, 80) and b.getpixel((0, 0)) == (0, 0, 255)
 
 
-def test_cli_type_persoon_kiest_haarmodel():
+def test_cli_type_kiest_model():
     import alphamaker.__main__ as cli
     seen = {}
     core_cutout, core.cutout = core.cutout, lambda img, model, **kw: (seen.setdefault('model', model), cut())[1]
     try:
         out = Path(__file__).resolve().parent / '_tmp.png'
         Image.new('RGB', (8, 8)).save(out)
-        cli.main([str(out), '--type', 'persoon', '-o', str(out.parent)])
-        expected = 'birefnet-general' if core.pt.available() else core.DEFAULT_MODEL
-        assert seen['model'] == expected, seen
+        for t, expected in (('persoon', 'birefnet-general' if core.pt.available() else core.DEFAULT_MODEL), ('object', 'rmbg-1.4')):
+            seen.clear()
+            cli.main([str(out), '--type', t, '-o', str(out.parent)])
+            assert seen['model'] == expected, (t, seen)
     finally:
         core.cutout = core_cutout
         for f in out.parent.glob('_tmp*.png'): f.unlink()
