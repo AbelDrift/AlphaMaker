@@ -43,6 +43,12 @@ def test_cli_type_kiest_model():
             seen.clear()
             cli.main([str(out), '-o', str(out.parent)] + ([t] if t and t.startswith('--') else ['--type', t] if t else []))
             assert seen['model'] == expected, (t, seen)
+        core.kind = lambda img: 'object'
+        for t, expected in ((['--type', 'auto'], 'rmbg-1.4'), (['--voorkeur=precies'], 'objecten-precies'),
+                            (['--voorkeur=precies', '--type', 'object'], 'objecten-precies')):
+            seen.clear()
+            cli.main([str(out), '-o', str(out.parent)] + t)
+            assert seen['model'] == expected, (t, seen)
         core.kind = core_kind
     finally:
         core.cutout = core_cutout
@@ -85,6 +91,14 @@ def test_serve_api():
     finally:
         core.cutout = core_cutout
         srv.shutdown()
+
+
+def test_agree():  # keuzeregel objecten-precies: IoU ≥ 0,75 = eens
+    import numpy as np
+    a = np.zeros((10, 10), np.float32); a[2:8, 2:8] = 1
+    b = a.copy(); b[2:8, 7] = 0  # IoU 30/36 ≈ 0,83
+    assert core.agree(a, a) and core.agree(a, b)
+    assert not core.agree(a, a * (np.arange(10) < 5)) and not core.agree(a, np.zeros_like(a))  # IoU 0,5 en 0
 
 
 if __name__ == '__main__':

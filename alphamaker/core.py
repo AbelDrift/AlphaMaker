@@ -59,8 +59,18 @@ def session(name, threads=4):
     return _sessions[name]
 
 
+def agree(a, b, t=0.75):
+    """Zijn twee maskers het eens (IoU ≥ t bij alpha > 0,5)? Drempel: bench/route_study.py."""
+    m, n = a > 0.5, b > 0.5
+    return (m & n).sum() >= t * max((m | n).sum(), 1)
+
+
 def segment(img, name):
     """img: PIL RGB → alpha float32 0..1 op volle resolutie (bilineair opgeschaald)."""
+    if name == 'objecten-precies':  # rmbg-1.4; oneens met isnet-general (drukke foto) → inspyrenet
+        a, b = segment(img, 'rmbg-1.4'), segment(img, 'isnet-general')
+        if agree(a, b): return a
+        return segment(img, 'inspyrenet') if DEFAULT_MODEL == 'inspyrenet' else b  # zonder torch: isnet-general
     if name in ('inspyrenet', *pt.PT) and name not in _pt:
         _pt.clear(); __import__('gc').collect()  # één zwaar model tegelijk (elk 2,5–4,3 GB)
     if name in pt.PT:
@@ -112,7 +122,7 @@ if all(importlib.util.find_spec(m) for m in ('transparent_background', 'torch'))
     DEFAULT_MODEL = 'inspyrenet'
 else:
     DEFAULT_MODEL = 'birefnet-general' if pt.available() else 'isnet-general'
-SEGMENTERS = ['inspyrenet'] + [m for m in MODELS if not m.startswith(('vitmatte', 'wbg'))] + list(pt.PT)
+SEGMENTERS = ['inspyrenet'] + [m for m in MODELS if not m.startswith(('vitmatte', 'wbg'))] + list(pt.PT) + ['objecten-precies']
 MAX_PIXELS = 50_000_000              # zelfde plafond als remove.bg
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
