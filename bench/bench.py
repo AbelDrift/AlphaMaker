@@ -62,6 +62,10 @@ def load(name):
     if name.startswith('pt-'):  # BiRefNet-familie via PyTorch (zie pt_models.py)
         from pt_models import load_pt
         return load_pt(name)
+    if name in ('inspyrenet-dis5k', 'inspyrenet-nightly'):  # schone InSPyReNet-varianten (zie testplan-2026-11.json)
+        from transparent_background import Remover
+        r = Remover(mode='base', device='cpu', ckpt=str(ROOT / 'models' / (name + '.pth')))
+        return lambda img: np.asarray(r.process(img, type='map').convert('L'), np.float32) / 255
     if name == 'inspyrenet':  # transparent-background
         from transparent_background import Remover
         r = Remover(mode='base', device='cpu')

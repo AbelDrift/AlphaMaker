@@ -193,3 +193,12 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - Zware RMBG-1.4 werkt weer in browser (7,0 s; licht 8,2 s) → standaard blijft zwaar; label licht aangepast.
 - 2026-11-16 20:18: PAUZE op verzoek van Abel. Workflow nieuwe modellen gestopt; hervatten: Workflow scriptPath ~/.claude/projects/-home-abel-claude-algemeen/63eeee7a-6517-415a-ba3c-8a163a78d5ff/workflows/scripts/alphamaker-nieuwe-modellen-wf_ceeab066-8ef.js + resumeFromRunId wf_ceeab066-8ef. Daarna kandidaten benchmarken (licht én nauwkeurig: Abel wil beide opties).
 - 2026-11-17 00:47: geplande hervatting; workflow nieuwe modellen hervat (task wtnrf4ntc). Swap 4,8/5,1 GB vol, 4,2 GB vrij → nieuwe benchmarks met lagere grens (≤3,5 GB) of eerst geheugen checken.
+
+## Testplan nieuwe modellen (2026-11-17 01:20) — `bench/testplan-2026-11.json`
+- 34 agents, 29 kandidaten, 20 bruikbaar. BELANGRIJK: transparent-background ckpt_base.pth (sha256 0a6fe2a7…)
+  = Plus_Ultra, getraind op o.a. **DIS-VD + DIS-TE** → InSPyReNet-DIS-score (0.0787) BESMET; alleen PPM 0.0754 schoon.
+  Rapporteer DIS en PPM altijd apart. Doelen: objecten < 0.0660 (rmbg-1.4), haar < 0.0670 (birefnet-general).
+- Volgorde: 1 inspyrenet-dis5k (schone nulmeting, DIS-TR only; sha256 ac057287… ok) · 2 S3OD dis/synth (ICLR 2026,
+  eigen venv, git-commit 11385423, torch.load weights_only=True forceren) · 3 withoutBG v4 matting · 4 PDFNet+DAv2-S ·
+  5 MVANet-ONNX · 6 FeyNobg · 7 BiRefNet_dynamic · 8 Finegrain · 9 MGD-SAM2-HRSOD · 10 SAM2Matting (NC) · 11 ZIM (NC).
+- run_all.sh heeft nu CAP (standaard 4500M). Unit `alphamaker-kand1`: inspyrenet-dis5k, CAP=3900M (4,2 GB vrij, swap vol).
