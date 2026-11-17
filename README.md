@@ -35,6 +35,8 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 | BiRefNet lite | 0,125 | 0,137 | 0,077 | 0,034 | 0,825 | 28 | 2,5 GB | MIT |
 
 > ⚠️ **Correctie (17 nov 2026): de objectscore van InSPyReNet is besmet.** Het standaard-checkpoint van transparent-background ("Plus Ultra") is volgens de model zoo van InSPyReNet getraind op onder meer DIS-VD, dus op onze objecttestbeelden. De schone InSPyReNet-versie (alleen DIS-TR) haalt op objecten 0,115 en op haar 0,108. Eerlijk gemeten is **RMBG-1.4 het beste op objecten (0,066)** en **BiRefNet general het beste op haar (0,067)**. De haarscore van InSPyReNet (0,075) is wel schoon. Zie de tabel hieronder voor de schone scores per soort foto.
+>
+> ⚠️ **Nieuw (17 nov, wordt nog uitgezocht):** op 60 nieuwe objectfoto's die geen enkel model kan kennen (synthetisch, 2025, uit de S3OD-set) scoort RMBG-1.4 juist het slechtst: rand 0,19 tegen 0,13 voor InSPyReNet en 0,11 voor BiRefNet general. Mogelijk kende RMBG-1.4 de DIS-foto's toch, of de maskers van die set (gemaakt door een model) leggen het onderwerp anders af. Tot dat duidelijk is, is de voorsprong van RMBG-1.4 op objecten onzeker.
 
 **Schoon gemeten per soort foto** (150 beelden over twee sets: 100 objecten uit DIS-VD en 50 portretten uit PPM-100). De objectscores van InSPyReNet staan tussen haakjes, omdat ze besmet en dus te gunstig zijn.
 
