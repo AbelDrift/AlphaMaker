@@ -38,14 +38,29 @@ def test_cli_type_kiest_model():
         Image.new('RGB', (8, 8)).save(out)
         persoon = 'birefnet-general' if core.pt.available() else core.DEFAULT_MODEL
         core_kind, core.kind = core.kind, lambda img: 'persoon'  # nep-router: geen download in de test
-        for t, expected in (('persoon', persoon), ('object', 'rmbg-1.4'), ('auto', persoon), (None, core.DEFAULT_MODEL)):
+        for t, expected in (('persoon', persoon), ('object', 'rmbg-1.4'), ('auto', persoon), (None, core.DEFAULT_MODEL),
+                            ('--voorkeur=snel', 'rmbg-1.4'), ('--voorkeur=precies', persoon)):
             seen.clear()
-            cli.main([str(out), '-o', str(out.parent)] + (['--type', t] if t else []))
+            cli.main([str(out), '-o', str(out.parent)] + ([t] if t and t.startswith('--') else ['--type', t] if t else []))
             assert seen['model'] == expected, (t, seen)
         core.kind = core_kind
     finally:
         core.cutout = core_cutout
         for f in out.parent.glob('_tmp*.png'): f.unlink()
+
+
+def test_load_exif_en_verkleinen():
+    """Telefoonfoto met EXIF-draaiing komt rechtop binnen; --voorkeur snel verkleint tot ~3 MP."""
+    import alphamaker.__main__ as cli
+    f = Path(__file__).resolve().parent / '_tmp_exif.jpg'
+    exif = Image.Exif(); exif[0x0112] = 6  # 90 graden gedraaid opgeslagen
+    Image.new('RGB', (4000, 3000)).save(f, exif=exif)
+    try:
+        assert cli.load(f).size == (3000, 4000)
+        w, h = cli.load(f, 3_000_000).size
+        assert (w, h) == (1500, 2000), (w, h)
+    finally:
+        f.unlink()
 
 
 def test_serve_api():

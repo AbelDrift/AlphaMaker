@@ -95,6 +95,8 @@ alphamaker *.jpg -o uitvoer/
 alphamaker portret.jpg --type persoon       # beste model voor haar (BiRefNet general)
 alphamaker product.jpg --type object       # beste en snelste voor objecten (RMBG-1.4, niet-commercieel)
 alphamaker *.jpg --type auto               # per foto kiezen: haar → BiRefNet general, anders RMBG-1.4
+alphamaker *.jpg --voorkeur snel           # snelst: RMBG-1.4, foto's boven 3 MP eerst verkleinen
+alphamaker *.jpg --voorkeur precies        # nauwkeurigst: per foto het beste model, volle resolutie
 alphamaker serve                             # webpagina op http://127.0.0.1:8092 (model kiezen, afwerken)
 
 # afwerken zoals bij remove.bg (alles lokaal):
@@ -103,6 +105,8 @@ alphamaker foto.jpg --achtergrond '#ffffff' --formaat jpg
 alphamaker foto.jpg --achtergrondfoto strand.jpg --schaduw
 alphamaker foto.jpg --alleen-masker                  # alleen het alfamasker (grijswaarden)
 ```
+
+**Snelheid of precisie kies je zelf.** Een telefoonfoto van 12 MP kost op een gewone pc met RMBG-1.4 op volle maat 12,5 s, en met `--voorkeur snel` 4,8 s (uitvoer 2000×1500, ruim genoeg voor een advertentie). Het model zelf kost maar ~2 s; de rest is nabewerking op volle resolutie. Foto's worden rechtop gezet volgens de EXIF-gegevens van de telefoon.
 
 Zonder PyTorch werkt AlphaMaker ook, maar dan met het lichtere IS-Net (ONNX). Modellen worden bij eerste gebruik gedownload: InSPyReNet via `transparent-background`, BiRefNet naar `~/.cache/alphamaker` (code en gewichten van vaste revisies). Reken op zo'n 4 GB vrij geheugen; `--model isnet-general` heeft genoeg aan 1 GB.
 

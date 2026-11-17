@@ -7,7 +7,7 @@ import argparse, io, json, sys
 from urllib.parse import parse_qs, urlsplit
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 from . import core
 
 MAX_UPLOAD = 40 * 1024 * 1024
@@ -39,7 +39,7 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get('Content-Length') or 0)
         if not 0 < n <= MAX_UPLOAD: return self._send(413, b'bestand te groot (max 40 MB)', 'text/plain')
         try:
-            img = Image.open(io.BytesIO(self.rfile.read(n)))
+            img = ImageOps.exif_transpose(Image.open(io.BytesIO(self.rfile.read(n))))
             img.load()
         except Exception:
             return self._send(400, b'geen geldige afbeelding', 'text/plain')
@@ -51,6 +51,15 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, buf.getvalue(), 'image/png')
 
 
+def load(f, max_px=None):
+    """Foto openen, rechtop gezet volgens EXIF (telefoons); optioneel verkleinen tot max_px pixels."""
+    img = ImageOps.exif_transpose(Image.open(f))
+    if max_px and img.width * img.height > max_px:
+        s = (max_px / (img.width * img.height)) ** 0.5
+        img = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
+    return img
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='alphamaker')
     ap.add_argument('files', nargs='+', help="afbeeldingen, of 'serve' voor de webpagina")
@@ -60,6 +69,9 @@ def main(argv=None):
                     help='zoals remove.bg type: persoon → birefnet-general (beste voor haar, traag), '
                          'object → rmbg-1.4 (beste en snelste voor objecten, niet-commercieel), '
                          'auto → per foto kiezen met de router van withoutBG (350 MB extra download)')
+    ap.add_argument('--voorkeur', choices=['snel', 'precies'],
+                    help='snel: RMBG-1.4 en foto\'s boven 3 MP eerst verkleinen (zoals 50%% bij een telefoonfoto); '
+                         'precies: per foto het beste model kiezen (--type auto), op volle resolutie')
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
     ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')
@@ -72,6 +84,8 @@ def main(argv=None):
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args(argv)
     by_type = {'persoon': 'birefnet-general' if core.pt.available() else None, 'object': 'rmbg-1.4'}
+    if a.voorkeur == 'snel': a.model = a.model or (None if a.type else 'rmbg-1.4')
+    if a.voorkeur == 'precies': a.type = a.type or 'auto'
     routed = a.type == 'auto' and not a.model  # een opgegeven --model gaat voor
     a.model = a.model or by_type.get(a.type) or core.DEFAULT_MODEL
     if a.files == ['serve']:
@@ -80,17 +94,17 @@ def main(argv=None):
         # één verzoek tegelijk: houdt het geheugengebruik voorspelbaar
         HTTPServer((a.host, a.port), Handler).serve_forever()
     bg = a.achtergrond or ('white' if a.formaat == 'jpg' and not a.achtergrondfoto and not a.alleen_masker else None)
-    bg_image = Image.open(a.achtergrondfoto) if a.achtergrondfoto else None
+    bg_image = load(a.achtergrondfoto) if a.achtergrondfoto else None
     files = list(map(Path, a.files))
     kinds = {}
     if routed:  # eerst alles routeren, dan de router vrijgeven (geheugen)
-        kinds = {f: core.kind(Image.open(f)) for f in files}
+        kinds = {f: core.kind(load(f)) for f in files}
         core._sessions.pop('wbg-router', None)
     for n, f in enumerate(files, 1):
         dst = (a.out or f.parent) / f'{f.stem}-alpha.{a.formaat}'
         dst.parent.mkdir(parents=True, exist_ok=True)
         model = by_type.get(kinds.get(f)) or a.model
-        cut = core.cutout(Image.open(f), model, refine_edges=a.fijne_randen)
+        cut = core.cutout(load(f, 3_000_000 if a.voorkeur == 'snel' else None), model, refine_edges=a.fijne_randen)
         core.finish(cut, a.bijsnijden, a.marge, a.alleen_masker, bg, bg_image, a.schaduw).save(dst, quality=95)
         info = f'  ({kinds[f]} → {model})' if f in kinds else ''
         print(f'[{n}/{len(files)}] {dst}{info}' if len(files) > 1 else f'{dst}{info}', flush=True)
