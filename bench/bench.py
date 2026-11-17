@@ -15,6 +15,7 @@ REMBG = 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/'
 HF = 'https://huggingface.co/'
 IMNET = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 HALF = ((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
+MODNET = ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 NONE = ((0, 0, 0), (1, 1, 1))
 # naam: (url, invoergrootte, normalisatie, nabewerking)
 MODELS = {
@@ -25,6 +26,7 @@ MODELS = {
     'mvanet':           (HF + 'onnx-community/MVANet-ONNX/resolve/43ec3427514b8d9164eea02df93ca2f1b036bb7b/onnx/model.onnx', 1024, IMNET, 'auto'),
     'mvanet-int8':      (HF + 'onnx-community/MVANet-ONNX/resolve/43ec3427514b8d9164eea02df93ca2f1b036bb7b/onnx/model_int8.onnx', 1024, IMNET, 'auto'),
     'finegrain-box':    (HF + 'MarcinEU/finegrain-box-segmenter-ONNX/resolve/544d5cc37109d3e8d318e9368a2467fcd99ac8c5/onnx/model.onnx', 1024, IMNET, 'sigmoid'),
+    'modnet':        (HF + 'Xenova/modnet/resolve/fa2fa546052fba4c08921230a26cc69a333fca12/onnx/model.onnx', -512, MODNET, 'auto'),  # portretten, Apache-2.0
     'rmbg-1.4-q':       (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model_quantized.onnx', 1024, HALF, 'minmax'),  # webversie 'licht'
     'birefnet-lite':    (REMBG + 'BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx', 1024, IMNET, 'sigmoid'),
     'birefnet-general': (REMBG + 'BiRefNet-general-epoch_244.onnx', 1024, IMNET, 'sigmoid'),
@@ -52,7 +54,9 @@ def predict_onnx(sess, cfg, img):
     _, size, (mean, std), post = cfg
     shp = sess.get_inputs()[0].shape
     if isinstance(shp[2], int): size = shp[2]
-    x = np.asarray(img.resize((size, size), Image.BILINEAR), np.float32) / 255
+    # negatieve size: kortste zijde = -size, zijden veelvoud van 32, verhouding behouden (zoals MODNet)
+    wh = tuple(max(32, round(d * -size / min(img.size) / 32) * 32) for d in img.size) if size < 0 else (size, size)
+    x = np.asarray(img.resize(wh, Image.BILINEAR), np.float32) / 255
     x = ((x - mean) / std).transpose(2, 0, 1)[None].astype(np.float32)
     y = sess.run(None, {sess.get_inputs()[0].name: x})[0][0, 0].astype(np.float32)
     if post == 'sigmoid' or (post == 'auto' and (y.min() < 0 or y.max() > 1)):
@@ -60,6 +64,35 @@ def predict_onnx(sess, cfg, img):
     elif post == 'minmax':
         y = (y - y.min()) / max(y.max() - y.min(), 1e-8)
     return np.asarray(Image.fromarray(y).resize(img.size, Image.BILINEAR), np.float32).clip(0, 1)
+
+
+# withoutBG open weights v4: hulpfuncties overgenomen uit het standalone-script in hun HF-README
+# (withoutbg/withoutbg-openweights-onnx @232aa520, Apache-2.0)
+def wbg_bilinear(x, height, width):
+    """(C, H, W) -> (C, height, width); torch bilinear, align_corners=False, no antialias."""
+    def axis(src, dst):
+        pos = np.maximum((np.arange(dst) + 0.5) * (src / dst) - 0.5, 0.0)
+        i0 = pos.astype(np.int64)
+        return i0, np.minimum(i0 + 1, src - 1), (pos - i0).astype(np.float32)
+    _, h, w = x.shape
+    r0, r1, rl = axis(h, height)
+    c0, c1, cl = axis(w, width)
+    rows = x[:, r0] * (1 - rl)[:, None] + x[:, r1] * rl[:, None]
+    return rows[:, :, c0] * (1 - cl) + rows[:, :, c1] * cl
+
+
+def wbg_feed(rgb, spec):
+    """Square-stretch native (H, W, 3) float RGB as each graph input's spec says."""
+    feeds = {}
+    for name, s in spec["inputs"].items():
+        if s["interpolation"] == "bicubic":  # antialiased; PIL "F" mode matches torch
+            x = np.stack([np.asarray(Image.fromarray(np.ascontiguousarray(rgb[..., c]))
+                                     .resize((s["size"],) * 2, Image.Resampling.BICUBIC))
+                          for c in range(3)])
+        else:
+            x = wbg_bilinear(np.ascontiguousarray(rgb.transpose(2, 0, 1)), s["size"], s["size"])
+        feeds[name] = np.ascontiguousarray(x[None], dtype=np.float32)
+    return feeds
 
 
 def load(name):
@@ -75,17 +108,31 @@ def load(name):
         r = Remover(mode='base', device='cpu')
         return lambda img: np.asarray(r.process(img, type='map').convert('L'), np.float32) / 255
     import onnxruntime as ort
+    so = ort.SessionOptions()
+    so.intra_op_num_threads = 4          # laat 4 threads over voor de desktop
+    so.enable_cpu_mem_arena = False      # lagere geheugenpiek
+    so.enable_mem_pattern = False       # geen vooraf gepland groot blok
+    so.add_session_config_entry('session.disable_prepacking', '1')  # geen verpakte kopie van gewichten
+    if name == 'wbg-matting':  # withoutBG v4, altijd de matting-tak (testplan #3); bestanden in models/withoutbg
+        d = ROOT / 'models' / 'withoutbg'
+        sc = json.loads((d / 'withoutbg-open-weights.onnx.json').read_text())
+        S = {k: ort.InferenceSession(str(d / sc[k]['file']), so, providers=['CPUExecutionProvider']) for k in ('router', 'coarse')}
+        r, c = sc['router'], sc['coarse']
+        def predict(img):
+            rgb = np.asarray(img, np.float32) / 255
+            rf = wbg_feed(rgb, r)
+            logits, *feats = S['router'].run([r['logits_name'], *r['feature_names']], rf)
+            print('route', r['categories'][int(np.argmax(logits[0]))], flush=True)
+            f = {**rf, **wbg_feed(rgb, {'inputs': {'rgb_depth': c['inputs']['rgb_depth']}}), **dict(zip(c['feature_names'], feats))}
+            a = S['coarse'].run([c['output_name']], f)[0][0]
+            return np.clip(wbg_bilinear(a, *rgb.shape[:2]), 0, 1)[0]
+        return predict
     cfg = MODELS[name]
     f = ROOT / 'models' / (name + '.onnx')
     if not f.exists():
         f.parent.mkdir(exist_ok=True)
         subprocess.run(['curl', '-sfL', '-o', str(f) + '.part', cfg[0]], check=True)
         Path(str(f) + '.part').rename(f)
-    so = ort.SessionOptions()
-    so.intra_op_num_threads = 4          # laat 4 threads over voor de desktop
-    so.enable_cpu_mem_arena = False      # lagere geheugenpiek
-    so.enable_mem_pattern = False       # geen vooraf gepland groot blok
-    so.add_session_config_entry('session.disable_prepacking', '1')  # geen verpakte kopie van gewichten
     sess = ort.InferenceSession(str(f), so, providers=['CPUExecutionProvider'])
     return lambda img: predict_onnx(sess, cfg, img)
 
