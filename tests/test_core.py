@@ -101,6 +101,23 @@ def test_agree():  # keuzeregel objecten-precies: IoU ≥ 0,75 = eens
     assert not core.agree(a, a * (np.arange(10) < 5)) and not core.agree(a, np.zeros_like(a))  # IoU 0,5 en 0
 
 
+
+def test_objecten_precies():  # welk masker komt terug, met nepmodellen (geen downloads)
+    import numpy as np
+    seg, dm = core.segment, core.DEFAULT_MODEL
+    a = np.zeros((10, 10), np.float32); a[2:8, 2:8] = 1
+    fake = {'rmbg-1.4': a, 'isnet-general': a.copy(), 'inspyrenet': np.full_like(a, 0.5)}
+    core.segment = lambda img, name: seg(img, name) if name == 'objecten-precies' else fake[name]
+    try:
+        assert core.segment(None, 'objecten-precies') is fake['rmbg-1.4']  # eens → rmbg-1.4
+        fake['isnet-general'] = np.zeros_like(a)  # oneens → inspyrenet, zonder torch isnet-general
+        want = 'inspyrenet' if core.DEFAULT_MODEL == 'inspyrenet' else 'isnet-general'
+        assert core.segment(None, 'objecten-precies') is fake[want], want
+        core.DEFAULT_MODEL = 'isnet-general'  # terugval zonder torch
+        assert core.segment(None, 'objecten-precies') is fake['isnet-general']
+    finally:
+        core.segment, core.DEFAULT_MODEL = seg, dm
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'): fn(); print('ok', name)
