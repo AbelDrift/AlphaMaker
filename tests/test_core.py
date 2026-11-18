@@ -106,13 +106,13 @@ def test_objecten_precies():  # welk masker komt terug, met nepmodellen (geen do
     import numpy as np
     seg, dm = core.segment, core.DEFAULT_MODEL
     a = np.zeros((10, 10), np.float32); a[2:8, 2:8] = 1
-    fake = {'rmbg-1.4': a, 'isnet-general': a.copy(), 'inspyrenet': np.full_like(a, 0.5)}
+    fake = {'rmbg-1.4': a, 'isnet-general': a.copy(), 'inspyrenet': np.full_like(a, 0.5), 'birefnet-general': np.full_like(a, 0.4)}
     core.segment = lambda img, name: seg(img, name) if name == 'objecten-precies' else fake[name]
     try:
         assert core.segment(None, 'objecten-precies') is fake['rmbg-1.4']  # eens → rmbg-1.4
-        fake['isnet-general'] = np.zeros_like(a)  # oneens → inspyrenet, zonder torch isnet-general
-        want = 'inspyrenet' if core.DEFAULT_MODEL == 'inspyrenet' else 'isnet-general'
-        assert core.segment(None, 'objecten-precies') is fake[want], want
+        fake['isnet-general'] = np.zeros_like(a)  # oneens → standaardmodel
+        for core.DEFAULT_MODEL in ('inspyrenet', 'birefnet-general'):
+            assert core.segment(None, 'objecten-precies') is fake[core.DEFAULT_MODEL], core.DEFAULT_MODEL
         core.DEFAULT_MODEL = 'isnet-general'  # terugval zonder torch
         assert core.segment(None, 'objecten-precies') is fake['isnet-general']
     finally:

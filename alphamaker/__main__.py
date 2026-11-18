@@ -73,7 +73,7 @@ def main(argv=None):
     ap.add_argument('--voorkeur', choices=['snel', 'precies'],
                     help='snel: RMBG-1.4 (niet-commercieel) en foto\'s boven 3 MP eerst verkleinen (zoals 50%% bij een telefoonfoto); '
                          'precies: per foto kiezen zoals --type auto, op volle resolutie; objecten via objecten-precies: '
-                         'rmbg-1.4, maar zijn rmbg-1.4 en isnet-general het oneens (drukke foto) dan inspyrenet')
+                         'rmbg-1.4, maar zijn rmbg-1.4 en isnet-general het oneens (drukke foto) dan het standaardmodel')
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
     ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')

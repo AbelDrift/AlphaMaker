@@ -14,7 +14,7 @@ mask = lambda s, m, n: np.asarray(Image.open(ROOT / f'preds/{s}/{m}/{n}.png').co
 
 rows = []
 for s in ('test_clean', 'test_clean2', 'test_syn', 'test_syn2'):
-    R = {m: res(s, m) for m in ('rmbg-1.4', 'isnet-general', 'inspyrenet')}
+    R = {m: res(s, m) for m in ('rmbg-1.4', 'isnet-general', 'inspyrenet', 'pt-birefnet-general')}
     R['schoon'] = R['inspyrenet'] if s.startswith('test_syn') else {n: (r if n.startswith('dis') else R['inspyrenet'][n]) for n, r in res(s, 'inspyrenet-dis5k').items()}  # alleen DIS is besmet
     for n in R['rmbg-1.4']:
         a, b = mask(s, 'rmbg-1.4', n), mask(s, 'isnet-general', n)
@@ -38,6 +38,7 @@ for m in ('rmbg-1.4', 'isnet-general', 'inspyrenet'):
     line(f'altijd {m}', lambda r, m=m: m)
 for t in (0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95):
     line(f'IoU(rmbg,isnet) < {t} -> insp.', lambda r, t=t: 'inspyrenet' if r['iou'] < t else 'rmbg-1.4')
+line('IoU < 0.75 -> birefnet (pt)', lambda r: 'pt-birefnet-general' if r['iou'] < 0.75 else 'rmbg-1.4')
 for t in (0.75,):  # zoals core.agree
     line(f'IoU < {t} -> isnet (zonder torch)', lambda r, t=t: 'isnet-general' if r['iou'] < t else 'rmbg-1.4')
 line('orakel (beste van rmbg/insp.)', lambda r: min(('rmbg-1.4', 'inspyrenet'), key=lambda m: r[m]['edge_mae']))

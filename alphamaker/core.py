@@ -67,10 +67,10 @@ def agree(a, b, t=0.75):
 
 def segment(img, name):
     """img: PIL RGB → alpha float32 0..1 op volle resolutie (bilineair opgeschaald)."""
-    if name == 'objecten-precies':  # rmbg-1.4; oneens met isnet-general (drukke foto) → inspyrenet
+    if name == 'objecten-precies':  # rmbg-1.4; oneens met isnet-general (drukke foto) → standaardmodel
         a, b = segment(img, 'rmbg-1.4'), segment(img, 'isnet-general')
         if agree(a, b): return a
-        return segment(img, 'inspyrenet') if DEFAULT_MODEL == 'inspyrenet' else b  # zonder torch: isnet-general
+        return b if DEFAULT_MODEL == 'isnet-general' else segment(img, DEFAULT_MODEL)  # inspyrenet, anders birefnet
     if name in ('inspyrenet', *pt.PT) and name not in _pt:
         _pt.clear(); __import__('gc').collect()  # één zwaar model tegelijk (elk 2,5–4,3 GB)
     if name in pt.PT:
