@@ -1,6 +1,7 @@
 | model | n | MAE | rand-MAE | rand DIS | rand PPM (haar) | IoU | s/beeld | piek MB | status |
 |---|---|---|---|---|---|---|---|---|---|
 | pt-birefnet-general | 60 | 0.0203 | **0.1145** | nan | nan | 0.920 | 36.6 | 4572 | ok |
+| pt-birefnet-lite | 60 | 0.0285 | **0.1195** | nan | nan | 0.910 | 26.1 | 2552 | ok |
 | inspyrenet | 60 | 0.0241 | **0.1316** | nan | nan | 0.920 | 13.8 | 3924 | ok |
 | rmbg-1.4 | 60 | 0.0676 | **0.1656** | nan | nan | 0.753 | 1.7 | 1122 | ok |
 | isnet-general | 60 | 0.0381 | **0.1756** | nan | nan | 0.850 | 1.5 | 898 | ok |
