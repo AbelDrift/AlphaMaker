@@ -8,8 +8,9 @@ requires-python = ">=3.10"
 dependencies = ["onnxruntime>=1.18", "numpy", "pillow", "scipy"]
 
 [project.optional-dependencies]
-# beste kwaliteit (InSPyReNet, BiRefNet); installeer torch eerst vanaf https://download.pytorch.org/whl/cpu
-beste = ["transparent-background", "torch", "torchvision", "timm", "kornia", "einops", "transformers<5", "safetensors"]
+# BiRefNet (haar, --voorkeur precies); InSPyReNet draait als ONNX en heeft dit niet nodig.
+# Installeer torch eerst vanaf https://download.pytorch.org/whl/cpu
+beste = ["torch", "torchvision", "timm", "kornia", "einops", "transformers<5", "safetensors"]
 
 [project.scripts]
 alphamaker = "alphamaker.__main__:main"

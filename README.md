@@ -9,14 +9,14 @@ Achtergrond verwijderen met de beste open modellen, **op je eigen apparaat**: al
 ## Snel aan de slag (zonder installeren)
 
 1. Open <https://abeldrift.github.io/AlphaMaker/>. Chrome of Edge is het snelst (WebGPU); Firefox werkt ook, maar trager.
-2. Sleep een of meer foto's in het vak, of plak er een met Ctrl+V. De eerste keer wordt een model gedownload (± 85–170 MB), daarna gaat het sneller.
+2. Sleep een of meer foto's in het vak, of plak er een met Ctrl+V. De eerste keer wordt een model gedownload (± 380 MB voor de standaard, InSPyReNet), daarna gaat het sneller.
 3. Kies eventueel een achtergrond, bijsnijden of schaduw, werk randen bij met de gum of het herstelpenseel, en klik op **Download**.
 
 Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 
 ## Wat het doet
 
-1. **Segmentatie** met het best gemeten open model: standaard InSPyReNet (`transparent-background`, MIT) als veilig compromis; voor portretten met veel haar BiRefNet general (`--type persoon`), voor rustige productfoto's RMBG-1.4 (`--type object`: daar beter én sneller, wel niet-commercieel; bij drukke foto's neemt het te veel mee). Het masker wordt op de originele maat opgeleverd.
+1. **Segmentatie** met het best gemeten open model: standaard InSPyReNet (MIT, ook commercieel te gebruiken; draait als ONNX, zonder PyTorch); voor portretten met veel haar BiRefNet general (`--type persoon`, MIT). RMBG-1.4 is op rustige productfoto's beter en sneller, maar **niet voor commercieel gebruik** en daarom alleen een uitdrukkelijke keuze (`--model rmbg-1.4`). Het masker wordt op de originele maat opgeleverd.
 2. **Randkleurcorrectie** ("blur fusion", Forte & Pitié 2021): de kleur van de oude achtergrond wordt uit haar en randen gehaald, zodat er geen gekleurde halo overblijft op een nieuwe achtergrond. remove.bg doet iets vergelijkbaars ("edge color corrections").
 3. Optioneel, experimenteel: **fijne randen** met ViTMatte, in tegels op volle resolutie. In onze benchmark werd dat niet beter (zie hieronder), daarom staat het standaard uit.
 
@@ -30,13 +30,13 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 | RMBG-1.4 | **0,075** | **0,067** | 0,110 | 0,016 | 0,923 | 1,7 | 1,1 GB | niet-commercieel |
 | RMBG-2.0 (alleen benchmark) | 0,089 | 0,092 | 0,076 | 0,013 | 0,914 | 42 | 4,3 GB | CC BY-NC 4.0 |
 | BiRefNet general | 0,096 | 0,103 | **0,069** | 0,020 | 0,888 | 41 | 4,3 GB | MIT |
-| IS-Net general | 0,103 | 0,094 | 0,137 | 0,013 | 0,932 | 1,6 | 1,0 GB | Apache-2.0 |
+| IS-Net general | 0,103 | 0,094 | 0,137 | 0,013 | 0,932 | 1,6 | 1,0 GB | gewichten zonder licentie (niet-commercieel) |
 | BEN2 | 0,123 | 0,125 | 0,116 | 0,025 | 0,856 | 16 | 3,9 GB | MIT |
 | BiRefNet lite | 0,125 | 0,137 | 0,077 | 0,034 | 0,825 | 28 | 2,5 GB | MIT |
 
-> ⚠️ **Correctie (17 nov 2026): de objectscore van InSPyReNet is besmet.** Het standaard-checkpoint van transparent-background ("Plus Ultra") is volgens de model zoo van InSPyReNet getraind op onder meer DIS-VD, dus op onze objecttestbeelden. De schone InSPyReNet-versie (alleen DIS-TR) haalt op objecten 0,115 en op haar 0,108. Eerlijk gemeten is **RMBG-1.4 het beste op objecten (0,066)** en **BiRefNet general het beste op haar (0,067)**. De haarscore van InSPyReNet (0,075) is wel schoon. Zie de tabel hieronder voor de schone scores per soort foto.
+> ⚠️ **Correctie (17 nov 2026): de objectscore van InSPyReNet is besmet.** Het standaard-checkpoint van transparent-background ("Plus Ultra") is volgens de model zoo van InSPyReNet getraind op onder meer DIS-VD, dus op onze objecttestbeelden. De schone InSPyReNet-versie (alleen DIS-TR) haalt op objecten 0,115 en op haar 0,108. Eerlijk gemeten is **RMBG-1.4 het beste op objecten (0,066; niet-commercieel)** en **BiRefNet general het beste op haar (0,067)**. De haarscore van InSPyReNet (0,075) is wel schoon. Zie de tabel hieronder voor de schone scores per soort foto.
 >
-> ⚠️ **Nieuw (17 nov): rommelige foto's.** Op 60 nieuwe objectfoto's (synthetisch, 2025, uit de S3OD-set) scoort RMBG-1.4 het slechtst: rand 0,19 tegen 0,13 voor InSPyReNet en 0,11 voor BiRefNet general (gemeten op 22 van de 60 foto's; daarna liep het tegen de geheugengrens van 4,5 GB aan). Bekeken: RMBG-1.4 laat bij drukke foto's alles op de voorgrond staan (een hele zonnebloem in plaats van het lieveheersbeestje, het hele aanrecht in plaats van de pan); bij 18 van de 60 foto's 20% of meer te veel, tegen 2 bij InSPyReNet. Besmetting met de DIS-foto's is daarmee niet aangetoond. Voor een rustige productfoto blijft RMBG-1.4 snel en goed; staat er meer in beeld, neem dan InSPyReNet.
+> ⚠️ **Nieuw (17 nov): rommelige foto's.** Op 60 nieuwe objectfoto's (synthetisch, 2025, uit de S3OD-set) scoort RMBG-1.4 het slechtst: rand 0,19 tegen 0,13 voor InSPyReNet en 0,11 voor BiRefNet general (gemeten op 22 van de 60 foto's; daarna liep het tegen de geheugengrens van 4,5 GB aan). Bekeken: RMBG-1.4 laat bij drukke foto's alles op de voorgrond staan (een hele zonnebloem in plaats van het lieveheersbeestje, het hele aanrecht in plaats van de pan); bij 18 van de 60 foto's 20% of meer te veel, tegen 2 bij InSPyReNet. Besmetting met de DIS-foto's is daarmee niet aangetoond. Voor een rustige productfoto blijft RMBG-1.4 snel en goed, maar het mag niet commercieel gebruikt worden; staat er meer in beeld, neem dan InSPyReNet.
 
 **Schoon gemeten per soort foto** (150 beelden over twee sets: 100 objecten uit DIS-VD en 50 portretten uit PPM-100). De objectscores van InSPyReNet staan tussen haakjes, omdat ze besmet en dus te gunstig zijn.
 
@@ -51,11 +51,11 @@ Je foto's verlaten je apparaat niet: alles wordt in je eigen browser berekend.
 
 Een misser is een beeld met IoU < 0,8: er mist een flink stuk van het onderwerp, of er staat een stuk achtergrond bij.
 
-- **Rustige objectfoto's en producten: RMBG-1.4.** Op de DIS-objecten scoort het het best op alle maten en het is het snelst, maar het is niet-commercieel, en bij drukke foto's neemt het te veel mee (zie de waarschuwing hierboven). Gebruik `--type object`. Het is ook de standaard in de webversie.
+- **Productfoto's, ook voor verkoop: InSPyReNet, de standaard.** MIT, dus ook commercieel te gebruiken. Op drukke foto's is het na BiRefNet het beste vrije model (0,13 tegen 0,18 voor IS-Net en 0,19 voor RMBG-1.4), en op portretten mist het niets. Het draait als ONNX: ongeveer 10 s per foto en 2,2 GB geheugen, zonder PyTorch, met dezelfde maskers als `transparent-background` (IoU 0,998 of hoger). `--type object` kiest hetzelfde model.
 - **Portretten en haar: BiRefNet general** is het nauwkeurigst, maar traag. Gebruik `--type persoon`, vergelijkbaar met `type=person` bij remove.bg. **InSPyReNet** is bijna even goed en 3× sneller.
-- **Standaard in de app: InSPyReNet.** Als je niet weet wat er op de foto staat, is dit het veiligste compromis: geen enkele misser op portretten, redelijk op objecten, en een MIT-licentie. De echte objectscore is onbekend, maar zelfs met het voordeel van de besmetting verliest het daar van RMBG-1.4. RMBG-1.4 is 8× sneller, maar mist op portretten vaker een stuk (MAE 5× hoger).
-- **Automatisch kiezen: `--type auto`.** De router van withoutBG (open weights v4) kijkt per foto of er haar op staat (ongeveer 1 s). Bij haar gaat de foto naar BiRefNet general, anders naar RMBG-1.4. Op de schone test levert dat objecten 0,066 en portretten 0,075 op (2 missers), dus op beide soorten het beste van twee werelden. De router herkende 37 van de 50 portretten als haar en geen enkel object. Het kost 350 MB extra download, en objecten lopen via RMBG-1.4 (niet-commercieel). Daarom is het een optie en niet de standaard.
-- **`--voorkeur precies` controleert objecten** (model `objecten-precies`). RMBG-1.4 en IS-Net maken elk een masker (samen ongeveer 3 s). Zijn ze het oneens (IoU onder 0,75), dan is de foto waarschijnlijk druk en neemt InSPyReNet het over. Gemeten op de bewaarde maskers (`bench/route_study.py`): DIS-objecten blijven gelijk aan RMBG-1.4 (0,066; geen enkele foto omgeleid, dus de besmetting van InSPyReNet telt niet mee), portretten 0,096 zonder missers (RMBG-1.4: 0,105 met 4), drukke foto's 0,137 met 7 missers (RMBG-1.4: 0,191 met 23; altijd InSPyReNet: 0,135 met 5). Is InSPyReNet er niet, dan neemt het standaardmodel het over: BiRefNet general (drukke foto's 0,128) of zonder torch IS-Net (0,159). De drempel is op die drukke foto's gekozen (alles tussen 0,6 en 0,8 geeft vrijwel hetzelfde). Op een controleset van 60 andere S3OD-foto's (`bench/prep_syn2.py`), met de drempel vooraf vast, haalt de regel 0,134 met 6 missers (RMBG-1.4: 0,166 met 24; altijd InSPyReNet: 0,132 met 5; zonder torch: 0,161 met 17). Geheugenpiek met InSPyReNet: 4,2 GB.
+- **Alleen voor niet-commercieel gebruik: RMBG-1.4** (`--model rmbg-1.4`, licentie bria-rmbg-1.4). Op rustige objectfoto's het beste (0,066) en 6× sneller, maar bij drukke foto's neemt het te veel mee en op portretten mist het vaker een stuk. Het mag **niet** gebruikt worden voor productfoto's voor verkoop; AlphaMaker meldt dat elke keer dat je het kiest. Hetzelfde geldt voor IS-Net (`--model isnet-general`: de gewichten hebben geen licentie en zijn getraind op DIS5K, dat commercieel gebruik verbiedt) en voor `--model objecten-precies` (hieronder).
+- **Automatisch kiezen: `--type auto`.** De router van withoutBG (open weights v4) kijkt per foto of er haar op staat (ongeveer 1 s). Bij haar gaat de foto naar BiRefNet general, anders naar InSPyReNet. De router herkende 37 van de 50 portretten als haar en geen enkel object. Het kost 350 MB extra download, en de router valt onder Meta's DINOv3-licentie, met gebruiksbeperkingen (zoals geen militair gebruik) en de verplichte vermelding 'Built with DINOv3'. Daarom is het alleen een optie, niet de standaard.
+- **`--model objecten-precies` (niet voor commercieel gebruik)**: RMBG-1.4 en IS-Net maken elk een masker (samen ongeveer 3 s). Zijn ze het oneens (IoU onder 0,75), dan is de foto waarschijnlijk druk en neemt InSPyReNet het over. Gemeten op de bewaarde maskers (`bench/route_study.py`): DIS-objecten blijven gelijk aan RMBG-1.4 (0,066; geen enkele foto omgeleid, dus de besmetting van InSPyReNet telt niet mee), portretten 0,096 zonder missers (RMBG-1.4: 0,105 met 4), drukke foto's 0,137 met 7 missers (RMBG-1.4: 0,191 met 23; altijd InSPyReNet: 0,135 met 5). De drempel is op die drukke foto's gekozen (alles tussen 0,6 en 0,8 geeft vrijwel hetzelfde). Op een controleset van 60 andere S3OD-foto's (`bench/prep_syn2.py`), met de drempel vooraf vast, haalt de regel 0,134 met 6 missers (RMBG-1.4: 0,166 met 24; altijd InSPyReNet: 0,132 met 5). Geheugenpiek als InSPyReNet het overneemt: 2,5 GB. Omdat het RMBG-1.4 en IS-Net gebruikt, mag het niet commercieel gebruikt worden. `--voorkeur precies` kiest daarom BiRefNet general (MIT): het beste vrije model op haar (0,067) en drukke foto's (0,112 en 0,115), maar traag (ongeveer 40 s per foto, PyTorch nodig).
 - **Nieuwe kandidaten (nov 2026)** uit `bench/testplan-2026-11.json`: MVANet (licht en zwaar) en Finegrain scoren op beide soorten foto's slechter. MODNet (portretten) heeft slechtere haarranden dan RMBG-1.4 (0,127 tegen 0,105). De matting-tak van withoutBG is op portretten beter dan RMBG-1.4 (0,096, 1 misser), maar blijft achter bij InSPyReNet en BiRefNet. S3OD is slechter dan RMBG-1.4: op objecten 0,104 (s3od-dis) en 0,133 (s3od-synth) tegen 0,066, op haar 0,128 (s3od-dis) tegen 0,105. PDFNet en BiRefNet_dynamic passen niet in 3,9 GB en zijn niet getest.
 - **RMBG-1.4 werkt alleen goed op 1024 px.** Op 768 of 1280 px (zelfde gewichten, vrije invoermaat) worden de randen veel slechter (0,124 en 0,085 tegen 0,066). Spiegelen en middelen wint 1% op objecten voor 2× de rekentijd; meerdere maten middelen is slechter. Sneller wordt het dus alleen door minder pixels na te bewerken (`--voorkeur snel`, of 'Snel' in de webversie).
 - **Combineren** (maskers middelen) leverde niets op. InSPyReNet + RMBG-1.4 gaf iets betere randen (0,075) maar een hogere totale fout; met BiRefNet erbij werd het slechter.
@@ -91,16 +91,17 @@ git clone https://github.com/AbelDrift/AlphaMaker && cd AlphaMaker
 python3 -m venv .venv && . .venv/bin/activate
 # PyTorch voor de CPU (veel kleiner dan de standaardversie met CUDA):
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install transparent-background timm kornia einops "transformers<5" safetensors
+pip install timm kornia einops "transformers<5" safetensors   # alleen nodig voor BiRefNet
 pip install -e .
 
 alphamaker foto.jpg                          # → foto-alpha.png
 alphamaker *.jpg -o uitvoer/
 alphamaker portret.jpg --type persoon       # beste model voor haar (BiRefNet general)
-alphamaker product.jpg --type object       # snelst, goed bij rustige productfoto's (RMBG-1.4, niet-commercieel)
-alphamaker *.jpg --type auto               # per foto kiezen: haar → BiRefNet general, anders RMBG-1.4
-alphamaker *.jpg --voorkeur snel           # snelst: RMBG-1.4, foto's boven 3 MP eerst verkleinen
-alphamaker *.jpg --voorkeur precies        # per foto: haar → BiRefNet general, objecten → RMBG-1.4 met controle (bij twijfel InSPyReNet)
+alphamaker product.jpg --type object       # InSPyReNet (MIT), zelfde als de standaard
+alphamaker *.jpg --type auto               # per foto kiezen: haar → BiRefNet general, anders InSPyReNet (router: DINOv3-licentie)
+alphamaker *.jpg --voorkeur snel           # foto's boven 3 MP eerst verkleinen: snellere nabewerking
+alphamaker *.jpg --voorkeur precies        # BiRefNet general (MIT): beste op haar en drukke foto's, traag
+alphamaker product.jpg --model rmbg-1.4    # NIET voor commercieel gebruik: snel en goed op rustige productfoto's
 alphamaker serve                             # webpagina op http://127.0.0.1:8092 (model kiezen, afwerken)
 
 # afwerken zoals bij remove.bg (alles lokaal):
@@ -110,19 +111,19 @@ alphamaker foto.jpg --achtergrondfoto strand.jpg --schaduw
 alphamaker foto.jpg --alleen-masker                  # alleen het alfamasker (grijswaarden)
 ```
 
-**Snelheid of precisie kies je zelf.** Een telefoonfoto van 12 MP kost op een gewone pc met RMBG-1.4 op volle maat 12,5 s, en met `--voorkeur snel` 4,8 s (uitvoer 2000×1500, ruim genoeg voor een advertentie). Het model zelf kost maar ~2 s; de rest is nabewerking op volle resolutie. Foto's worden rechtop gezet volgens de EXIF-gegevens van de telefoon.
+**Snelheid of precisie kies je zelf.** Een telefoonfoto van 12 MP kost op een gewone pc met InSPyReNet ongeveer 10 s voor het model plus 6–10 s nabewerking op volle maat; met `--voorkeur snel` (eerst naar 3 MP) kost de nabewerking ongeveer 1 s (uitvoer 2000×1500, ruim genoeg voor een advertentie). Foto's worden rechtop gezet volgens de EXIF-gegevens van de telefoon.
 
-Zonder PyTorch werkt AlphaMaker ook, maar dan met het lichtere IS-Net (ONNX). Modellen worden bij eerste gebruik gedownload: InSPyReNet via `transparent-background`, BiRefNet naar `~/.cache/alphamaker` (code en gewichten van vaste revisies). Reken op zo'n 4 GB vrij geheugen; `--model isnet-general` heeft genoeg aan 1 GB.
+Zonder PyTorch werkt de standaard volledig: InSPyReNet draait als ONNX. Alleen BiRefNet (`--type persoon`, `--type auto` en `--voorkeur precies`) heeft PyTorch nodig; zonder PyTorch gebruiken die opties InSPyReNet en meldt AlphaMaker dat. Modellen worden bij eerste gebruik gedownload naar `~/.cache/alphamaker`. InSPyReNet (377 MB) en de router komen van een vaste revisie en worden gecontroleerd op hun vingerafdruk; BiRefNet komt van een vaste revisie; de andere modellen (RMBG-1.4, BEN2, ViTMatte, IS-Net, U²-Net) komen van de nieuwste versie bij Hugging Face of GitHub, zonder controle. Reken op zo'n 2,5 GB vrij geheugen voor de standaard en 4,5 GB voor BiRefNet.
 
 ## Webversie
 
 Staat in [`docs/`](docs/) en heeft geen bouwstap: onnxruntime-web 1.31.1 met WebGPU (grafische kaart) of WebAssembly (processor). Modellen komen van Hugging Face en worden in de browser bewaard.
 
-- InSPyReNet bestaat niet als browsermodel. De standaard is daarom RMBG-1.4: beste randen op de schone testset, klein (84–167 MB) en snel, maar niet-commercieel (staat erbij).
-- RMBG-1.4 is er ook in een lichte versie (42 MB). Die is 2,8% minder nauwkeurig (rand-MAE 0,081 tegen 0,079 op 150 beelden) en op oudere processors niet sneller (Firefox: 8,2 s tegen 7,0 s). Handig bij een trage verbinding.
+- De standaard is InSPyReNet (MIT, ook commercieel), hetzelfde model als in de CLI (377 MB, eenmalige download). Op de processor kost het in Firefox ongeveer 29 s per foto; met WebGPU gaat het sneller.
+- RMBG-1.4 (ook in een lichte versie van 42 MB) is sneller, ongeveer 6 s, en beter op rustige productfoto's, maar **niet voor commercieel gebruik**. Dat staat in het menu en bij de licentie zodra je het kiest.
 - Met WebGPU kun je ook BiRefNet kiezen, het beste voor haar (466 MB). Zonder WebGPU past BiRefNet niet in de 4 GB die WebAssembly maximaal mag gebruiken.
 - Foto's groter dan 12 megapixel worden op 12 MP berekend en daarna op de volle maat toegepast (tot 50 MP).
-- **Snel** rekent op 3 MP en schaalt daarna terug naar de volle maat. Een foto van 12 MP is in Firefox (processor) dan in ongeveer 8 s klaar in plaats van 11 s: het model kost ~5 s, de randkleuren 0,9 s in plaats van 3,7 s. Genoeg voor advertenties.
+- **Snel** rekent op 3 MP en schaalt daarna terug naar de volle maat. Dat bespaart alleen nabewerking: bij een foto van 12 MP kosten de randkleuren in Firefox (processor) 0,9 s in plaats van 3,7 s. Het model zelf blijft even lang (InSPyReNet ongeveer 28 s, RMBG-1.4 ongeveer 5 s). Genoeg voor advertenties.
 - Afwerken zoals in de Python-app: achtergrondkleur of -foto, bijsnijden tot het onderwerp (met marge) en schaduw; downloaden als PNG, JPG of alleen het masker.
 - Meerdere foto's tegelijk: ze worden na elkaar verwerkt en zijn samen te downloaden.
 - Met de hand bijwerken: een gum en een herstelpenseel (originele pixels terug), zoals in de editor van remove.bg.
@@ -141,9 +142,9 @@ Zie [`NOTES.md`](NOTES.md) voor het volledige logboek: onderzoek, keuzes, misluk
 
 ## Licenties
 
-De code van AlphaMaker valt onder MIT. De modellen hebben hun eigen licenties, zie de tabel. RMBG-1.4 en RMBG-2.0 zijn alleen voor niet-commercieel gebruik. RMBG-2.0 is alleen in de benchmark gebruikt, niet in de app. RMBG-1.4 is in de webversie de standaard zonder WebGPU; voor commercieel gebruik kies je daar een ander model of een licentie van Bria.
+De code van AlphaMaker valt onder MIT. De modellen hebben hun eigen licenties, zie de tabel. Alle standaarden (CLI en webversie) gebruiken modellen die ook commercieel gebruikt mogen worden: InSPyReNet (MIT) en voor haar BiRefNet (MIT). RMBG-1.4 en RMBG-2.0 zijn alleen voor niet-commercieel gebruik. RMBG-1.4 blijft beschikbaar als uitdrukkelijke keuze, en AlphaMaker meldt dan dat het niet commercieel gebruikt mag worden; RMBG-2.0 is alleen in de benchmark gebruikt. Voor IS-Net general is de code Apache-2.0, maar de gewichten zijn zonder licentie gepubliceerd en getraind op DIS5K, dat commercieel gebruik verbiedt; ook dat model is daarom alleen een uitdrukkelijke keuze. Ook InSPyReNet en BiRefNet zijn deels op DIS5K getraind, maar hun gewichten hebben een uitdrukkelijke MIT-licentie.
 
-De router voor `--type auto` komt uit withoutBG open weights v4 (`withoutbg/withoutbg-openweights-onnx`, revisie 232aa520): Apache-2.0 plus de voorwaarden van DINOv3. Built with DINOv3. Hun modelpagina noemt daarnaast een aparte commerciële licentie; check die zelf bij commercieel gebruik.
+De router voor `--type auto` komt uit withoutBG open weights v4 (`withoutbg/withoutbg-openweights-onnx`, revisie 232aa520): Apache-2.0 plus Meta's DINOv3-licentie, met gebruiksbeperkingen (zoals geen militair gebruik) en de verplichte vermelding 'Built with DINOv3'. Daarom zit de router alleen in de optie `--type auto`. Built with DINOv3.
 
 ---
 
@@ -151,7 +152,7 @@ De router voor `--type auto` komt uit withoutBG open weights v4 (`withoutbg/with
 
 AlphaMaker removes image backgrounds locally, as a Python CLI/local web page or fully in-browser (GitHub/Codeberg Pages, WebGPU/WASM).
 
-On clean benchmarks (150 images: DIS5K-VD objects and PPM-100 portraits, kept out of the models' training data), **RMBG-1.4** (non-commercial) is the best and fastest on objects (boundary error 0.066, 1.7 s per image) and is the browser default. **BiRefNet general** (MIT) is the best on hair (0.067), but slow. **InSPyReNet** (transparent-background, MIT) comes close on hair (0.075) at 3× the speed of BiRefNet, and is the CLI default as the safe compromise. Use `--type object` or `--type persoon` to pick the specialist. InSPyReNet's default checkpoint was trained on DIS-VD, so its object score is not reliable.
+On clean benchmarks (150 images: DIS5K-VD objects and PPM-100 portraits, kept out of the models' training data), **RMBG-1.4** is the best and fastest on objects (boundary error 0.066, 1.7 s per image), but it may **not** be used commercially, so it is only available as an explicit choice (`--model rmbg-1.4`). Every default is commercially usable: **InSPyReNet** (MIT; run as ONNX without PyTorch: about 10 s and 2.2 GB in the CLI, about 29 s per photo in Firefox on the CPU) in the CLI and in the browser, and **BiRefNet general** (MIT) for hair (`--type persoon`). On busy object photos InSPyReNet is far more reliable than RMBG-1.4 (0.13 vs 0.19). InSPyReNet's default checkpoint was trained on DIS-VD, so its object score on DIS is not reliable.
 
 An earlier test on DIS5K-TE1 favoured BiRefNet, but its weights were trained on those test images. Edge refinement (ViTMatte, guided filter, high-res tile re-segmentation) and model averaging did not help. Foreground colour decontamination ("blur fusion") is applied to avoid halos.
 

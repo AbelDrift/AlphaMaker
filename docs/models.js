@@ -1,18 +1,27 @@
 // Modellen voor de browser. Alleen Hugging Face: daar werkt CORS (GitHub-releases niet).
 // bytes = omvang op Hugging Face (nov 2026), gebruikt voor de plausibiliteitscontrole van de download.
 const HF = 'https://huggingface.co/';
-const file = (repo, name, bytes) => ({ url: `${HF}${repo}/resolve/main/onnx/${name}`, bytes });
+const file = (repo, name, bytes, rev = 'main') => ({ url: `${HF}${repo}/resolve/${rev}/onnx/${name}`, bytes });
 const IMAGENET = { mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225] };
 const HALF = { mean: [0.5, 0.5, 0.5], std: [1, 1, 1] };
+const INSPY = 'OS-Software/InSPyReNet-SwinB-Plus-Ultra-ONNX', INSPY_REV = 'fe628d2d1465f775c707368a80248a2d5b5ad71f';
 
-// RMBG-1.4: beste randen op de schone testset, klein en snel (niet-commercieel, staat erbij).
-// BiRefNet is beter voor haar maar 466 MB en past niet in WASM (max 4 GB).
-export const DEFAULT_MODEL = { webgpu: 'rmbg-1.4', wasm: 'rmbg-1.4' };
+// Standaard InSPyReNet Plus Ultra (MIT, ook commercieel; zelfde maskers als de CLI). RMBG-1.4 is NIET voor
+// commercieel gebruik en blijft alleen als uitdrukkelijke keuze. BiRefNet (beter voor haar) past niet in WASM.
+export const DEFAULT_MODEL = { webgpu: 'inspyrenet', wasm: 'inspyrenet' };
 export const MAX_PIXELS = 12_000_000;  // grotere foto's eerst verkleinen: geheugen van browser en telefoon
 
 // files per rekenkern: 'wasm' (processor) en 'webgpu' (fp16 op de grafische kaart). Geen bestand = kan daar niet.
 // post: nabewerking van de modeluitvoer (zie refine.postprocess)
 export const MODELS = {
+  'inspyrenet': {  // vastgezette revisie; fp32 voor beide kernen (fp16 is in de browser niet aangetoond)
+    label: 'InSPyReNet (MIT, ook commercieel)', license: 'MIT: vrij te gebruiken, ook commercieel',
+    size: 1024, norm: IMAGENET, post: 'auto',
+    files: {
+      wasm: file(INSPY, 'model.onnx', 395316574, INSPY_REV),
+      webgpu: file(INSPY, 'model.onnx', 395316574, INSPY_REV),
+    },
+  },
   'birefnet-lite': {
     label: 'BiRefNet lite', license: 'MIT', size: 1024, norm: IMAGENET, post: 'auto',
     files: {
@@ -20,7 +29,8 @@ export const MODELS = {
     },
   },
   'rmbg-1.4': {
-    label: 'Nauwkeurig: RMBG-1.4 (niet-commercieel)', license: 'bria-rmbg-1.4: alleen voor niet-commercieel gebruik',
+    label: 'RMBG-1.4 (NIET voor commercieel gebruik)',
+    license: 'bria-rmbg-1.4: NIET voor commercieel gebruik, dus niet voor productfoto\'s voor verkoop',
     nonCommercial: true, size: 1024, norm: HALF, post: 'minmax',
     files: {
       wasm: file('briaai/RMBG-1.4', 'model.onnx', 176153355),
@@ -28,7 +38,8 @@ export const MODELS = {
     },
   },
   'rmbg-1.4-licht': {
-    label: 'Licht: RMBG-1.4, snelle download, iets minder nauwkeurig (niet-commercieel)', license: 'bria-rmbg-1.4: alleen voor niet-commercieel gebruik',
+    label: 'RMBG-1.4 licht, kleine download (NIET voor commercieel gebruik)',
+    license: 'bria-rmbg-1.4: NIET voor commercieel gebruik, dus niet voor productfoto\'s voor verkoop',
     nonCommercial: true, size: 1024, norm: HALF, post: 'minmax',
     files: {
       wasm: file('briaai/RMBG-1.4', 'model_quantized.onnx', 44403226),

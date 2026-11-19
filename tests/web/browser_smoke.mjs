@@ -1,7 +1,7 @@
 // Rooktest van de webversie in een echte (headless) Firefox via WebDriver BiDi — geen extra pakketten.
 // Gebruik: node tests/web/browser_smoke.mjs <url-van-pagina> <url-van-testfoto> [model]
 // Verwacht: Firefox gestart met --remote-debugging-port $BIDI_PORT (standaard 9333).
-const [url, photo, model = 'rmbg-1.4-licht', snel = ''] = process.argv.slice(2);
+const [url, photo, model = 'inspyrenet', snel = ''] = process.argv.slice(2);
 const ws = new WebSocket(`ws://127.0.0.1:${process.env.BIDI_PORT || 9333}/session`);
 let id = 0;
 const pending = new Map(), logs = [];

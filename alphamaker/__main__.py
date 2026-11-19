@@ -27,7 +27,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ('/', '/index.html'): return self._send(200, PAGE, 'text/html; charset=utf-8')
         if self.path == '/api/models':
-            return self._send(200, json.dumps({'models': core.SEGMENTERS, 'default': self.model}).encode(), 'application/json')
+            return self._send(200, json.dumps({'models': core.SEGMENTERS, 'default': self.model, 'noncommercial': sorted(core.NONCOMMERCIAL)}).encode(), 'application/json')
         self._send(404, b'niet gevonden', 'text/plain')
 
     def do_POST(self):
@@ -64,16 +64,17 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog='alphamaker')
     ap.add_argument('files', nargs='+', help="afbeeldingen, of 'serve' voor de webpagina")
     ap.add_argument('-o', '--out', type=Path, help='uitvoermap (standaard naast het origineel)')
-    ap.add_argument('--model', choices=core.SEGMENTERS, help=f'standaard: {core.DEFAULT_MODEL}')
+    ap.add_argument('--model', choices=core.SEGMENTERS,
+                    help=f'één model voor alle foto\'s (standaard: {core.DEFAULT_MODEL}, MIT). NIET voor commercieel gebruik: '
+                         + ', '.join(sorted(core.NONCOMMERCIAL)))
     ap.add_argument('--type', choices=['auto', 'persoon', 'object'],
-                    help='zoals remove.bg type: persoon → birefnet-general (beste voor haar, traag), '
-                         'object → rmbg-1.4 (snelst, goed bij rustige productfoto\'s; bij drukke foto\'s is de standaard '
-                         'betrouwbaarder; niet-commercieel), '
-                         'auto → per foto kiezen met de router van withoutBG: haar → persoon, anders object (350 MB extra download)')
+                    help='zoals remove.bg type: persoon → birefnet-general (MIT; beste voor haar, traag), '
+                         'object → inspyrenet (MIT, de standaard), auto → per foto kiezen met de router van withoutBG: '
+                         'haar → persoon, anders object (350 MB extra download; de router valt onder Meta\'s DINOv3-licentie, '
+                         'met gebruiksbeperkingen zoals geen militair gebruik)')
     ap.add_argument('--voorkeur', choices=['snel', 'precies'],
-                    help='snel: RMBG-1.4 (niet-commercieel) en foto\'s boven 3 MP eerst verkleinen (zoals 50%% bij een telefoonfoto); '
-                         'precies: per foto kiezen zoals --type auto, op volle resolutie; objecten via objecten-precies: '
-                         'rmbg-1.4, maar zijn rmbg-1.4 en isnet-general het oneens (drukke foto) dan het standaardmodel')
+                    help='snel: foto\'s boven 3 MP eerst verkleinen (zoals 50%% bij een telefoonfoto; zelfde model); '
+                         'precies: birefnet-general (MIT; beste op haar en drukke foto\'s, traag), op volle resolutie')
     ap.add_argument('--fijne-randen', action='store_true', help='experimenteel: ViTMatte-randverfijning (was in de benchmark niet beter)')
     ap.add_argument('--bijsnijden', action='store_true', help='bijsnijden tot het onderwerp (zoals remove.bg crop)')
     ap.add_argument('--marge', type=float, default=0.0, help='marge bij bijsnijden, als fractie van het onderwerp (0.05 = 5%%)')
@@ -85,13 +86,18 @@ def main(argv=None):
     ap.add_argument('--port', type=int, default=8092)
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args(argv)
-    by_type = {'persoon': 'birefnet-general' if core.pt.available() else None, 'object': 'rmbg-1.4'}
-    if a.voorkeur == 'snel': a.model = a.model or (None if a.type else 'rmbg-1.4')
-    if a.voorkeur == 'precies': a.type = a.type or 'auto'; by_type['object'] = 'objecten-precies'
-    routed = a.type == 'auto' and not a.model  # een opgegeven --model gaat voor
+    by_type = {'persoon': 'birefnet-general' if core.pt.available() else None, 'object': 'inspyrenet'}
+    if a.voorkeur == 'precies' and not a.type: a.model = a.model or by_type['persoon']  # zonder torch: standaard
+    def warn(models):  # niet-commerciële modellen altijd uitdrukkelijk benoemen
+        for m in sorted(set(models) & core.NONCOMMERCIAL.keys()):
+            print(f'Let op: {m} mag niet commercieel gebruikt worden ({core.NONCOMMERCIAL[m]}), '
+                  'dus niet voor productfoto\'s voor verkoop.', file=sys.stderr)
+    routed = a.type == 'auto' and not a.model and core.pt.available()  # zonder BiRefNet verandert de router niets
+    if not (a.model or core.pt.available()) and (a.type in ('auto', 'persoon') or a.voorkeur == 'precies'):
+        print("Let op: BiRefNet heeft PyTorch nodig (pip install -e '.[beste]'); nu wordt overal inspyrenet gebruikt.", file=sys.stderr)
     a.model = a.model or by_type.get(a.type) or core.DEFAULT_MODEL
     if a.files == ['serve']:
-        Handler.model = a.model
+        Handler.model = a.model; warn([a.model])
         print(f'AlphaMaker op http://{a.host}:{a.port}  (Ctrl+C stopt)', flush=True)
         # één verzoek tegelijk: houdt het geheugengebruik voorspelbaar
         HTTPServer((a.host, a.port), Handler).serve_forever()
@@ -102,6 +108,9 @@ def main(argv=None):
     if routed:  # eerst alles routeren, dan de router vrijgeven (geheugen)
         kinds = {f: core.kind(load(f)) for f in files}
         core._sessions.pop('wbg-router', None)
+    warn({by_type.get(kinds.get(f)) or a.model for f in files})
+    if routed: print('Let op: de router van withoutBG valt onder Meta\'s DINOv3-licentie, met gebruiksbeperkingen '
+                     '(zoals geen militair gebruik).', file=sys.stderr)
     for n, f in enumerate(files, 1):
         dst = (a.out or f.parent) / f'{f.stem}-alpha.{a.formaat}'
         dst.parent.mkdir(parents=True, exist_ok=True)

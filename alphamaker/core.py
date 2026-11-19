@@ -1,5 +1,5 @@
 """AlphaMaker-kern: segmentatie (ONNX) → verfijning op volle resolutie → randkleurcorrectie."""
-import hashlib, importlib.util, os, urllib.request
+import hashlib, os, urllib.request
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -13,6 +13,9 @@ NONE = ((0, 0, 0), (1, 1, 1))
 # ONNX-modellen; naam: (url, invoergrootte, normalisatie, nabewerking, sha256 of None).
 # De BiRefNet-familie en RMBG-2.0 draaien via PyTorch (pt.py): ONNX Runtime heeft daarvoor >4,5 GB nodig.
 MODELS = {
+    # InSPyReNet Plus Ultra (MIT) als ONNX: zelfde maskers als transparent-background, sneller en zuiniger, zonder torch
+    'inspyrenet':       (HF + 'OS-Software/InSPyReNet-SwinB-Plus-Ultra-ONNX/resolve/fe628d2d1465f775c707368a80248a2d5b5ad71f/onnx/model.onnx',
+                         1024, IMNET, 'auto', 'c108dd92b3ddfe3a2d9e9ac2b74730cc5acbb2ddc7ea863330c43f56ae832aa3'),
     'u2net':            (REMBG + 'u2net.onnx', 320, IMNET, 'minmax', None),
     'isnet-general':    (REMBG + 'isnet-general-use.onnx', 1024, HALF, 'minmax', None),
     'rmbg-1.4':         (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model.onnx', 1024, HALF, 'minmax', None),
@@ -24,6 +27,9 @@ MODELS = {
     'wbg-router':       (HF + 'withoutbg/withoutbg-openweights-onnx/resolve/232aa520ccb6f94316cd638a7d916832479ec9a8/withoutbg-open-weights-backbone.onnx',
                          448, None, None, 'a64ba43cc25557f568ad6f35ed1139049dd43f5568385fa4f9848e0b4c7123ff'),
 }
+# niet voor commercieel gebruik (dus niet voor productfoto's voor verkoop): alleen als uitdrukkelijke keuze, met melding
+NONCOMMERCIAL = {'rmbg-1.4': 'licentie bria-rmbg-1.4', 'isnet-general': 'gewichten zonder licentie, getraind op DIS5K',
+                 'objecten-precies': 'gebruikt RMBG-1.4 en IS-Net'}
 CACHE = Path(os.environ.get('ALPHAMAKER_MODELS', Path.home() / '.cache/alphamaker'))
 _sessions = {}
 _pt = {}
@@ -70,19 +76,12 @@ def segment(img, name):
     if name == 'objecten-precies':  # rmbg-1.4; oneens met isnet-general (drukke foto) → standaardmodel
         a, b = segment(img, 'rmbg-1.4'), segment(img, 'isnet-general')
         if agree(a, b): return a
-        return b if DEFAULT_MODEL == 'isnet-general' else segment(img, DEFAULT_MODEL)  # inspyrenet, anders birefnet
-    if name in ('inspyrenet', *pt.PT) and name not in _pt:
-        _pt.clear(); __import__('gc').collect()  # één zwaar model tegelijk (elk 2,5–4,3 GB)
+        return segment(img, DEFAULT_MODEL)
+    if name in ('inspyrenet', *pt.PT) and name not in (_pt if name in pt.PT else _sessions):
+        _pt.clear(); _sessions.pop('inspyrenet', None); __import__('gc').collect()  # één zwaar model tegelijk (2,2–4,3 GB)
     if name in pt.PT:
         if name not in _pt: _pt[name] = pt.load(name, CACHE)
         return _pt[name](img)
-    if name == 'inspyrenet':  # transparent-background (MIT): beste allrounder op de schone testset
-        if name not in _pt:
-            import torch
-            from transparent_background import Remover
-            torch.set_num_threads(4)
-            _pt[name] = Remover(mode='base', device='cpu')
-        return np.asarray(_pt[name].process(img, type='map').convert('L'), np.float32) / 255
     _, size, (mean, std), post, _ = MODELS[name]
     sess = session(name)
     shp = sess.get_inputs()[0].shape
@@ -117,12 +116,8 @@ def kind(img):
     return 'persoon' if int(np.argmax(logits)) == 0 else 'object'  # klassen: fine_strand, soft_detail, transparency, ...
 
 
-# veilig compromis (0 missers op portretten, MIT); objecten: rmbg-1.4, haar: birefnet-general (zie README)
-if all(importlib.util.find_spec(m) for m in ('transparent_background', 'torch')):  # opzoeken zonder torch te laden
-    DEFAULT_MODEL = 'inspyrenet'
-else:
-    DEFAULT_MODEL = 'birefnet-general' if pt.available() else 'isnet-general'
-SEGMENTERS = ['inspyrenet'] + [m for m in MODELS if not m.startswith(('vitmatte', 'wbg'))] + list(pt.PT) + ['objecten-precies']
+DEFAULT_MODEL = 'inspyrenet'  # MIT, ook commercieel; 0 missers op portretten, beste vrije model op drukke foto's na BiRefNet
+SEGMENTERS = [m for m in MODELS if not m.startswith(('vitmatte', 'wbg'))] + list(pt.PT) + ['objecten-precies']
 MAX_PIXELS = 50_000_000              # zelfde plafond als remove.bg
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Draait docs/ in headless Firefox (eigen tijdelijk profiel) met een echte foto; alles samen max 3 GB.
-# Gebruik: tests/web/run_browser_smoke.sh [foto] [model]   (standaard: eerste portret uit data/test, rmbg-1.4-licht)
+# Gebruik: tests/web/run_browser_smoke.sh [foto] [model]   (standaard: eerste portret uit data/test, inspyrenet)
 cd "$(dirname "$0")/../.."
-FOTO=${1:-$(ls data/test/ppm_*.jpg | head -1)}; MODEL=${2:-rmbg-1.4-licht}
+FOTO=${1:-$(ls data/test/ppm_*.jpg | head -1)}; MODEL=${2:-inspyrenet}
 T=$(mktemp -d); mkdir -p "$T/site" "$T/profiel"; cp -r docs/. "$T/site/"; cp "$FOTO" "$T/site/test.jpg"
 cleanup() { kill $SRV $FF 2>/dev/null; wait 2>/dev/null; rm -rf "$T"; }
 trap cleanup EXIT

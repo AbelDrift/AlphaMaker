@@ -1,5 +1,6 @@
-"""Commercieel toegestane keuzeregel (voor SellYourShit): isnet-general (Apache-2.0), tenzij isnet en u2net
-(Apache-2.0) het oneens zijn -> inspyrenet (MIT). Naast de losse modellen en de niet-commerciele rmbg-regel.
+"""Keuzeregel met u2net als controleur: isnet-general, tenzij isnet en u2net het oneens zijn -> inspyrenet (MIT).
+Bedoeld als commerciele variant, maar de isnet-gewichten hebben geen licentie (DIS5K: niet-commercieel), zie
+bench/onderzoek-licenties-2026-11-19.json. Uitkomst: werkt niet (u2net te zwak). Naast de losse modellen en de rmbg-regel.
 DIS: inspyrenet is daarop getraind; kolom 'dis schoon' telt omgeleide DIS-foto's met inspyrenet-dis5k."""
 import json
 from pathlib import Path

@@ -181,8 +181,10 @@ drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');
 drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); handle(e.dataTransfer.files[0]); };
 addEventListener('paste', e => { const f = e.clipboardData.files[0]; if (f) handle(f); });
-fetch('/api/models').then(r => r.json()).then(({ models, default: d }) => {
-  $('model').replaceChildren(...models.map(m => new Option(m === 'inspyrenet' ? m + ' (beste allrounder)' : m === 'birefnet-general' ? m + ' (beste voor haar)' : m, m)));
+fetch('/api/models').then(r => r.json()).then(({ models, default: d, noncommercial = [] }) => {
+  const label = m => noncommercial.includes(m) ? m + ' (NIET voor commercieel gebruik)'
+    : m === 'inspyrenet' ? m + ' (standaard, MIT)' : m === 'birefnet-general' ? m + ' (beste voor haar, MIT)' : m;
+  $('model').replaceChildren(...models.map(m => new Option(label(m), m)));
   $('model').value = d;
 }).catch(() => {});
 // overgenomen uit docs/app.js: houd gelijk
