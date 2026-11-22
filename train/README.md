@@ -55,7 +55,7 @@ uploadtool van de aanbieder.
 
 ```bash
 git clone https://github.com/AbelDrift/AlphaMaker && cd AlphaMaker
-pip install timm onnx onnxruntime-gpu pillow scipy
+pip install timm onnx onnxruntime-gpu pillow scipy transparent-background   # laatste: reserve-leermeester op de GPU
 python train/kit.py label --data /workspace/alphamaker-train        # maskers van de leermeester
 python train/kit.py train --data /workspace/alphamaker-train --epochs 150 --batch 16 --size 768
 python train/kit.py export --data /workspace/alphamaker-train --out /workspace/licht.onnx

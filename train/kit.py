@@ -64,6 +64,14 @@ def label(a):
     """Masker van de leermeester per foto (PNG, zelfde maat) + statistiek: voorgrond, onzeker, randen bezet."""
     d = Path(a.data); (d / 'masks').mkdir(exist_ok=True)
     s = teacher_session(a.cache); stats = {}
+    rem = None
+    try:  # vindt onnxruntime-gpu CUDA niet: zelfde model (transparent-background, MIT) via torch op de GPU
+        import torch
+        if 'CUDAExecutionProvider' not in s.get_providers() and torch.cuda.is_available():
+            from transparent_background import Remover
+            rem = Remover(mode='base', device='cuda'); print('leermeester via transparent-background (cuda)', flush=True)
+    except ImportError:
+        pass
     old = d / 'labels.jsonl'
     if old.exists(): stats = {r['img']: r for r in map(json.loads, old.read_text().splitlines())}
     names = (d / 'train.txt').read_text().split() + (d / 'val.txt').read_text().split()
@@ -71,9 +79,12 @@ def label(a):
         for i, n in enumerate(names):
             if n in stats: continue
             im = Image.open(d / 'images' / n).convert('RGB')
-            x = ((np.asarray(im.resize((1024, 1024), Image.BILINEAR), np.float32) / 255 - MEAN) / STD).transpose(2, 0, 1)[None]
-            y = s.run(None, {'input': x})[0][0, 0].astype(np.float32)
-            m = np.asarray(Image.fromarray(y).resize(im.size, Image.BILINEAR)).clip(0, 1)
+            if rem is not None:
+                m = np.asarray(rem.process(im, type='map').convert('L'), np.float32) / 255
+            else:
+                x = ((np.asarray(im.resize((1024, 1024), Image.BILINEAR), np.float32) / 255 - MEAN) / STD).transpose(2, 0, 1)[None]
+                y = s.run(None, {'input': x})[0][0, 0].astype(np.float32)
+                m = np.asarray(Image.fromarray(y).resize(im.size, Image.BILINEAR)).clip(0, 1)
             Image.fromarray((m * 255 + .5).astype(np.uint8)).save(d / 'masks' / (n[:-4] + '.png'))
             rand = np.concatenate([m[0], m[-1], m[:, 0], m[:, -1]]) > .5
             r = {'img': n, 'fg': round(float((m > .5).mean()), 4), 'unsure': round(float(((m > .1) & (m < .9)).mean()), 4),
