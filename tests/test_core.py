@@ -93,6 +93,18 @@ def test_serve_api():
         srv.shutdown()
 
 
+def test_geen_achtergrond():  # close-up: object loopt het beeld uit
+    import numpy as np
+    a = np.zeros((100, 100), np.float32)
+    a[15:85, 15:85] = 1                       # gewone productfoto: object met ruimte eromheen (fg 0,49)
+    assert not core.geen_achtergrond(a)
+    assert core.geen_achtergrond(np.ones_like(a))  # alles voorgrond
+    b = np.zeros_like(a); b[:, :70] = 1       # loopt links, boven en onder het beeld uit (fg 0,7)
+    assert core.geen_achtergrond(b)
+    c = np.zeros_like(a); c[:, :20] = 1       # smal object langs de rand: te weinig voorgrond (fg 0,2)
+    assert not core.geen_achtergrond(c)
+
+
 def test_agree():  # keuzeregel objecten-precies: IoU ≥ 0,75 = eens
     import numpy as np
     a = np.zeros((10, 10), np.float32); a[2:8, 2:8] = 1

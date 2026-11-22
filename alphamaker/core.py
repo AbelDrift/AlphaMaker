@@ -71,6 +71,13 @@ def agree(a, b, t=0.75):
     return (m & n).sum() >= t * max((m | n).sum(), 1)
 
 
+def geen_achtergrond(alpha, fg=0.45, rand=0.15):
+    """Close-up zonder achtergrond: het object loopt het beeld uit (gemiddeld >= 15% van de beeldrand bezet) en vult
+    >= 45% van het beeld. Gekalibreerd op eigen productfoto's: close-ups rand 0,23-0,67, gewone foto's <= 0,07."""
+    m = np.asarray(alpha) > 0.5
+    return bool(m.mean() >= fg and (m[0].mean() + m[-1].mean() + m[:, 0].mean() + m[:, -1].mean()) / 4 >= rand)
+
+
 def segment(img, name):
     """img: PIL RGB → alpha float32 0..1 op volle resolutie (bilineair opgeschaald)."""
     if name == 'objecten-precies':  # rmbg-1.4; oneens met isnet-general (drukke foto) → standaardmodel
