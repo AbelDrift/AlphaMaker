@@ -94,7 +94,7 @@ def label(a):
 
 
 # ---------------- leerling ----------------
-def build_student():
+def build_student(pretrained=False):
     import timm, torch, torch.nn as nn, torch.nn.functional as F
 
     def block(i, o):  # dieptescheidbaar, licht voor de cpu
@@ -104,7 +104,8 @@ def build_student():
     class Student(nn.Module):
         def __init__(self):
             super().__init__()
-            self.enc = timm.create_model('mobilenetv4_conv_medium', pretrained=False, features_only=True)  # geen ImageNet
+            # pretrained: ImageNet-gewichten van timm (Apache-2.0; ImageNet-data zelf heeft onderzoeksvoorwaarden)
+            self.enc = timm.create_model('mobilenetv4_conv_medium', pretrained=pretrained, features_only=True)
             ch = self.enc.feature_info.channels()                     # [32, 48, 80, 160, 960] op 1/2 .. 1/32
             w = [64, 64, 96, 128]
             self.top = nn.Sequential(nn.Conv2d(ch[4], 128, 1, bias=False), nn.BatchNorm2d(128), nn.ReLU(inplace=True))
@@ -191,7 +192,7 @@ def train(a):
     d = Path(a.data); ck = d / 'student.pt'
     tr, va = Data(d, 'train', a.size, True), Data(d, 'val', a.size, False)
     dl = DataLoader(tr, a.batch, shuffle=True, num_workers=a.workers, drop_last=len(tr) > a.batch, persistent_workers=a.workers > 0)
-    net = build_student().to(dev)
+    net = build_student(a.pretrained).to(dev)
     opt = torch.optim.AdamW(net.parameters(), lr=a.lr, weight_decay=1e-4)
     steps = a.epochs * max(1, len(dl))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, a.lr, total_steps=steps, pct_start=.05)
@@ -272,7 +273,7 @@ if __name__ == '__main__':
     p = sub.add_parser('label'); p.add_argument('--data', required=True); p.add_argument('--cache', default=str(Path.home() / '.cache/alphamaker'))
     p = sub.add_parser('train'); p.add_argument('--data', required=True); p.add_argument('--epochs', type=int, default=60)
     p.add_argument('--batch', type=int, default=16); p.add_argument('--size', type=int, default=768); p.add_argument('--lr', type=float, default=2e-3)
-    p.add_argument('--workers', type=int, default=8); p.add_argument('--max-steps', type=int, default=0, help='alleen voor een proefrun')
+    p.add_argument('--workers', type=int, default=8); p.add_argument('--pretrained', action='store_true'); p.add_argument('--max-steps', type=int, default=0, help='alleen voor een proefrun')
     p = sub.add_parser('export'); p.add_argument('--data', required=True); p.add_argument('--out', default='licht.onnx')
     p = sub.add_parser('eval'); p.add_argument('--onnx', required=True); p.add_argument('--data'); p.add_argument('--limit', type=int, default=0)
     a = ap.parse_args()
