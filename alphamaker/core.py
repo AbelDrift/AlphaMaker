@@ -16,8 +16,9 @@ MODELS = {
     # InSPyReNet Plus Ultra (MIT) als ONNX: zelfde maskers als transparent-background, sneller en zuiniger, zonder torch
     'inspyrenet':       (HF + 'OS-Software/InSPyReNet-SwinB-Plus-Ultra-ONNX/resolve/fe628d2d1465f775c707368a80248a2d5b5ad71f/onnx/model.onnx',
                          1024, IMNET, 'auto', 'c108dd92b3ddfe3a2d9e9ac2b74730cc5acbb2ddc7ea863330c43f56ae832aa3'),
-    # eigen snel model (train/kit.py, ±0,8 s); nog niet gepubliceerd: zet licht.onnx zelf in CACHE. Alleen via 'licht' hieronder.
-    'licht-net':        (None, 1024, IMNET, None, None),
+    # eigen snel model (MIT; train/kit.py, eigen foto's met InSPyReNet-maskers, ±0,8 s). Alleen via 'licht' hieronder.
+    'licht-net':        ('https://github.com/AbelDrift/AlphaMaker/releases/download/licht-v1/licht-net.onnx',
+                         1024, IMNET, None, '2b55ffe1e63824347ebc18f3c929793be23219da21a47a7baab1705d0ae3e598'),
     'u2net':          (REMBG + 'u2net.onnx', 320, IMNET, 'minmax', None),
     'isnet-general':    (REMBG + 'isnet-general-use.onnx', 1024, HALF, 'minmax', None),
     'rmbg-1.4':         (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model.onnx', 1024, HALF, 'minmax', None),
