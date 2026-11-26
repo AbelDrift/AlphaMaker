@@ -273,3 +273,7 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
 - 2026-11-26 09:18: RONDE 2 (Abel: voorgetrainde encoder ok): pod gkkajgzf714jlm Community RTX 4090 $0,34/u, ssh root@47.47.180.71 -p 12228. Achtergrondtaak: upload, label, train --pretrained 100 ep, autostop 45 min na klaar, download naar ProductFoto/alphamaker-train-resultaat-2. DAARNA: pod verwijderen (delete-pod gkkajgzf714jlm) en eval.
 - 2026-11-26 10:50: ronde 2 MISLUKT door eigen fout: autostop keek ook naar 'Error' in run.log (de verwachte onnxruntime-CUDA-melding) en stopte de pod 45 min later midden in de training; zonder volume is de data weg. Pod gkkajgzf714jlm verwijderd (404), saldo $20,29. Geen 4090 vrij (Community en Secure); RTX 5000 Ada $0,49/u wacht op Abel. Volgende keer: autostop alleen op KLAAR-ALLES|Traceback.
 - 2026-11-26 11:13: ronde 2b: pod ip6lgcb7sg49yk Community RTX 5000 Ada $0,49/u (Abel: neem wat eerst vrij is), train/pod.sh. DAARNA: delete-pod ip6lgcb7sg49yk en eval.
+- 2026-11-26 15:30: RONDE 2b klaar (RTX 5000 Ada, 100 ep, --pretrained, val-IoU 0,955). Pod ip6lgcb7sg49yk verwijderd (404), saldo $18,11 (ronde 2+2b ±$2,20).
+  Eval (rand-MAE / missers / s per foto op laptop): eigen val 0,067/27 van 448 (ronde 1: 0,074/29), test_syn2 0,259/48 van 60 (0,283/49),
+  test_clean2 0,254/74 van 100 (0,271/80); InSPyReNet 0,132/5 en 0,077/2. ±0,8 s/foto. Iets beter, nog niet goed genoeg als "licht".
+  Model: ProductFoto/alphamaker-train-resultaat-2/licht.onnx (+student.pt).
