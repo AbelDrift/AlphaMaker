@@ -131,6 +131,21 @@ def test_objecten_precies():  # welk masker komt terug, met nepmodellen (geen do
         core.segment, core.DEFAULT_MODEL = seg, dm
 
 
+def test_licht_terugval():  # snel model; twijfelt het (veel halfdoorzichtig), dan het standaardmodel
+    import numpy as np
+    seg = core.segment
+    zeker = np.zeros((10, 10), np.float32); zeker[2:8, 2:8] = 1
+    vaag = zeker * 0.6; vaag[3:7, 3:7] = 1                    # 20 van 36 pixels halfdoorzichtig
+    std = np.full_like(zeker, 0.3)
+    assert not core.twijfel(zeker) and core.twijfel(vaag)
+    for snel, verwacht in ((zeker, zeker), (vaag, std)):
+        fake = {'licht-net': snel, core.DEFAULT_MODEL: std}
+        core.segment = lambda img, name: seg(img, name) if name == 'licht' else fake[name]
+        try: assert core.segment(None, 'licht') is verwacht
+        finally: core.segment = seg
+    assert 'licht' in core.SEGMENTERS and 'licht-net' not in core.SEGMENTERS
+
+
 def test_niet_commercieel_gemeld():  # eis: RMBG-1.4 e.d. alleen expliciet en altijd met melding
     import io, contextlib, alphamaker.__main__ as cli
     core_cutout, core.cutout = core.cutout, lambda img, model, **kw: cut()

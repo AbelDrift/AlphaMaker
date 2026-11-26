@@ -16,7 +16,9 @@ MODELS = {
     # InSPyReNet Plus Ultra (MIT) als ONNX: zelfde maskers als transparent-background, sneller en zuiniger, zonder torch
     'inspyrenet':       (HF + 'OS-Software/InSPyReNet-SwinB-Plus-Ultra-ONNX/resolve/fe628d2d1465f775c707368a80248a2d5b5ad71f/onnx/model.onnx',
                          1024, IMNET, 'auto', 'c108dd92b3ddfe3a2d9e9ac2b74730cc5acbb2ddc7ea863330c43f56ae832aa3'),
-    'u2net':            (REMBG + 'u2net.onnx', 320, IMNET, 'minmax', None),
+    # eigen snel model (train/kit.py, ±0,8 s); nog niet gepubliceerd: zet licht.onnx zelf in CACHE. Alleen via 'licht' hieronder.
+    'licht-net':        (None, 1024, IMNET, None, None),
+    'u2net':          (REMBG + 'u2net.onnx', 320, IMNET, 'minmax', None),
     'isnet-general':    (REMBG + 'isnet-general-use.onnx', 1024, HALF, 'minmax', None),
     'rmbg-1.4':         (HF + 'briaai/RMBG-1.4/resolve/main/onnx/model.onnx', 1024, HALF, 'minmax', None),
     'ben2':             (HF + 'PramaLLC/BEN2/resolve/main/BEN2_Base.onnx', 1024, NONE, 'minmax', None),
@@ -39,6 +41,7 @@ def model_path(name):
     url, *_, sha = MODELS[name]
     f = CACHE / (name + '.onnx')
     if not f.exists():
+        if not url: raise FileNotFoundError(f'{f} ontbreekt: dit model wordt niet gedownload')
         CACHE.mkdir(parents=True, exist_ok=True)
         tmp = f.with_suffix('.part')
         print(f'model {name} downloaden…', flush=True)
@@ -78,12 +81,22 @@ def geen_achtergrond(alpha, fg=0.45, rand=0.15):
     return bool(m.mean() >= fg and (m[0].mean() + m[-1].mean() + m[:, 0].mean() + m[:, -1].mean()) / 4 >= rand)
 
 
+def twijfel(alpha, t=0.12):
+    """Twijfelt het snelle model? Halfdoorzichtige pixels t.o.v. de voorgrond > t. Eigen val (bench/gate_study.py):
+    15% terugval, missers 27 → 6 van 448."""
+    a = np.asarray(alpha)
+    return bool(((a > .1) & (a < .9)).sum() > t * max((a > .5).sum(), 1))
+
+
 def segment(img, name):
     """img: PIL RGB → alpha float32 0..1 op volle resolutie (bilineair opgeschaald)."""
     if name == 'objecten-precies':  # rmbg-1.4; oneens met isnet-general (drukke foto) → standaardmodel
         a, b = segment(img, 'rmbg-1.4'), segment(img, 'isnet-general')
         if agree(a, b): return a
         return segment(img, DEFAULT_MODEL)
+    if name == 'licht':  # snel model; twijfelt het, dan het standaardmodel
+        a = segment(img, 'licht-net')
+        return segment(img, DEFAULT_MODEL) if twijfel(a) else a
     if name in ('inspyrenet', *pt.PT) and name not in (_pt if name in pt.PT else _sessions):
         _pt.clear(); _sessions.pop('inspyrenet', None); __import__('gc').collect()  # één zwaar model tegelijk (2,2–4,3 GB)
     if name in pt.PT:
@@ -124,7 +137,7 @@ def kind(img):
 
 
 DEFAULT_MODEL = 'inspyrenet'  # MIT, ook commercieel; 0 missers op portretten, beste vrije model op drukke foto's na BiRefNet
-SEGMENTERS = [m for m in MODELS if not m.startswith(('vitmatte', 'wbg'))] + list(pt.PT) + ['objecten-precies']
+SEGMENTERS = [m for m in MODELS if not m.startswith(('vitmatte', 'wbg', 'licht'))] + list(pt.PT) + ['objecten-precies', 'licht']
 MAX_PIXELS = 50_000_000              # zelfde plafond als remove.bg
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
