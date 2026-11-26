@@ -282,3 +282,4 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   Gemiddeld ±1,8 s (10%) tot ±3,8 s (30%) per foto i.p.v. 10 s. Op de vreemde testsets werkt het niet (net toeval). Spiegel-signaal niet beter.
   Besluit "licht = snel + terugval" ligt bij Abel.
 - 2026-11-26 16:45: AlphaMaker --model licht (opt-in): snel model + terugval naar standaardmodel bij twijfel (drempel 0,12 → 15%, missers 27→6/448). Model niet gepubliceerd: licht-net.onnx zelf in ~/.cache/alphamaker. SellYourShit ongewijzigd tot Abel beslist.
+- 2026-11-26 17:00: praktijkcheck licht op eerste 20 val-foto's: 12 zelf afgemaakt, 8 naar InSPyReNet (exact als gate_study voorspelt), gem 6,5 s; deze 20 zijn moeilijker dan gemiddeld (40% vs 15% terugval).
