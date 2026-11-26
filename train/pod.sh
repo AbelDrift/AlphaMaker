@@ -8,7 +8,7 @@ tar -C "$P" -cf - "$NAME" | $S "mkdir -p /workspace && tar -C /workspace -xf - &
 printf '%s\n' 'set -e' 'cd /workspace && git clone -q https://github.com/AbelDrift/AlphaMaker && cd AlphaMaker' \
   'pip install -q --break-system-packages timm onnx onnxruntime-gpu scipy transparent-background' "D=/workspace/$NAME" \
   'python train/kit.py label --data $D' \
-  'python train/kit.py train --data $D --epochs 100 --batch 16 --size 768 --workers 10 --pretrained' \
+  'python train/kit.py train --data $D --epochs 100 --batch 16 --size 768 --workers $(nproc) --pretrained' \
   'python train/kit.py export --data $D --out /workspace/licht.onnx' 'echo KLAAR-ALLES' \
   | $S 'cat > /workspace/run.sh; nohup bash /workspace/run.sh > /workspace/run.log 2>&1 &'
 printf '%s\n' 'export $(tr "\0" "\n" < /proc/1/environ | grep -E "^RUNPOD_(API_KEY|POD_ID)=")' \
