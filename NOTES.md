@@ -277,3 +277,7 @@ Licentie: voor privégebruik zijn alle prima; voor verkoop alleen MIT/Apache.
   Eval (rand-MAE / missers / s per foto op laptop): eigen val 0,067/27 van 448 (ronde 1: 0,074/29), test_syn2 0,259/48 van 60 (0,283/49),
   test_clean2 0,254/74 van 100 (0,271/80); InSPyReNet 0,132/5 en 0,077/2. ±0,8 s/foto. Iets beter, nog niet goed genoeg als "licht".
   Model: ProductFoto/alphamaker-train-resultaat-2/licht.onnx (+student.pt).
+- 2026-11-26 16:30: bench/gate_study.py: twijfelsignaal 'soft' (aandeel halfdoorzichtige pixels t.o.v. voorgrond, gratis) vangt op EIGEN
+  productfoto's de missers: 10% terugval naar InSPyReNet → 19/27 gevangen (8 over, 1,8%), 20% → 21/27, 30% → 24/27 (3 over).
+  Gemiddeld ±1,8 s (10%) tot ±3,8 s (30%) per foto i.p.v. 10 s. Op de vreemde testsets werkt het niet (net toeval). Spiegel-signaal niet beter.
+  Besluit "licht = snel + terugval" ligt bij Abel.
